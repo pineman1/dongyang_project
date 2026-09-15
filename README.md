@@ -33,3 +33,16 @@ pip install -r requirements.txt
 
 # 3. 애플리케이션 실행
 streamlit run app.py
+
+
+# 1. 작업 시작 전: 항상 최신 코드 가져오기
+git pull origin main
+
+# 2. 작업 완료 후: 수정한 파일 스테이징
+git add .
+
+# 3. 커밋 생성: 변경 내용 요약 작성
+git commit -m "feat: ML 모델 확률 계산 로직 수정"
+
+# 4. 원격 저장소 반영: 깃허브에 푸시
+git push origin main
