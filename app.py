@@ -29,7 +29,7 @@ REQUIRED_KEYS = {
 }
 
 # ==========================================
-# 🛠️ [업그레이드] 다이내믹 Mock API (가상의 보험료 계산기)
+# 🛠️ [업그레이드] 다이내믹 Mock API (가상의 보험료 계 산기)
 # ==========================================
 def mock_design_api_v2(customer_info, product_name, include_rider, payment_term):
     age = customer_info.get("나이", 40)
