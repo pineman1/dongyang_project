@@ -30,29 +30,36 @@
 이 명령어를 치면 팀원 컴퓨터에 깃허브에 올린 파일들이 그대로 복사되어 다운로드됩니다.
 
 Bash
-git clone [https://github.com/팀계정/저장소이름.git](https://github.com/팀계정/저장소이름.git)
-cd 저장소이름
+git clone https://github.com/pineman1/dongyang_project
+cd dongyang_project
 
 2️⃣ 가상환경 및 라이브러리 세팅 (최초 1회)
 각자 컴퓨터에 파이썬 가상환경을 켜고, requirements.txt로 동일한 라이브러리를 일괄 설치합니다.
 
-🚨 주의: API 키가 들어있는 .env 파일은 보안상 깃허브에 없으므로, 팀장(PO)에게 비공개로 전달받아 각자 프로젝트 루트 폴더에 직접 만들어 넣게 합니다.
-
 Bash
+python -m venv venv
+.\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+
+오류발생시(입력 후 재실행)
+Set-ExecutionPolicy RemoteSigned -Scope Process
 
 3️⃣ 매일 작업 시작: 최신 코드 내려받기 (필수)
 다른 팀원이 올린 변경 사항을 내 컴퓨터 폴더로 덮어씌워 일치시킵니다. (작업 시작 전 항상 입력)
 
 Bash
+git checkout main
 git pull origin main
 
-4️⃣ 코드 수정 후 깃허브로 업로드
+
+4️⃣코드 수정 시에는 개인 브랜치 항상 만들어서 하기(main에 직접 하지 않도록 주의)
+
+코드 수정 후 깃허브로 업로드
 내 컴퓨터의 VS Code에서 코드를 수정한 뒤 터미널에 아래 3줄을 쳐서 온라인 깃허브에 반영합니다.
 
 Bash
 git add .
-git commit -m "수정 내용 요약 (예: ML 모델 확률 계산 로직 수정)"
+git commit -m "수정 내용 요약"
 git push origin main
 
 💻 애플리케이션 실행 방법
