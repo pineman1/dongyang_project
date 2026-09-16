@@ -44,6 +44,8 @@ pip install -r requirements.txt
 오류발생시(입력 후 재실행)
 Set-ExecutionPolicy RemoteSigned -Scope Process
 
++ 94줄 streamlit 관련 오류 발생으로 requirements.txt 수정하였습니다.
+
 3️⃣ 매일 작업 시작: 최신 코드 내려받기 (필수)
 다른 팀원이 올린 변경 사항을 내 컴퓨터 폴더로 덮어씌워 일치시킵니다. (작업 시작 전 항상 입력)
 
