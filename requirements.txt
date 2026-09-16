@@ -95,3 +95,17 @@ urllib3==2.2.3
 watchdog==4.0.2
 yarl==1.15.2
 zipp==3.20.2
+streamlit
+fpdf2
+python-dotenv
+pandas
+numpy
+scikit-learn
+pymupdf
+faiss-cpu
+langchain
+langchain-community
+langchain-core
+langchain-text-splitters
+langchain-google-genai
+google-generativeai
