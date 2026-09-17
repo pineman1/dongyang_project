@@ -1,5 +1,26 @@
 # dongyang_project
 
+## 월 보험료 예측 모델 — 새 개인 브랜치
+
+동양생명 **무배당 엔젤안심보험(2023.9 개정)** 공개 보험료 72개로 학습한 회귀 모델을 추가했습니다.
+현재 견적이 아닌 과거 상품표 기반 연구용 모델입니다. 기존 `customer_data.csv`는 합성 고객 데이터이며, 새 보험료 모델 학습에는 사용하지 않습니다.
+
+- [설치·실행·모델 설명](README_PREMIUM.md)
+- [데이터 출처와 수집 범위](data/README.md)
+- [재현 가능한 검증 결과](reports/premium_metrics.json)
+
+현재 작업 폴더에서 기존 `venv`로 실행:
+
+```powershell
+cd dongyang_project
+..\venv\Scripts\python.exe -m pip install -r requirements-premium.txt
+..\venv\Scripts\python.exe -m streamlit run premium_app.py
+```
+
+새 모델은 **API 키 없이 실행**됩니다. 독립 실행은 `premium_app.py`, 기존 앱에서는 사이드바의 `Premium Prediction` 페이지를 사용하세요. 기존 `app.py`의 가상 보험료 계산식은 이 모델과 별개입니다.
+
+---
+
 # 💼 동양생명 하이브리드 세일즈 어시스턴트 (AI FC Assistant)
 
 ## 📌 프로젝트 개요
@@ -62,10 +83,11 @@ git pull origin main
 Bash
 git add .
 git commit -m "수정 내용 요약"
-git push origin main
+git push -u origin HEAD
 
 💻 애플리케이션 실행 방법
 로컬에서 앱이 정상적으로 구동되는지 테스트하려면 터미널에 아래 명령어를 입력합니다.
 
 Bash
 streamlit run app.py
+```

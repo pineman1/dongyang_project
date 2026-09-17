@@ -1,0 +1,29 @@
+{
+  "source_id": "tongyang_angel_ansim_202309_hana",
+  "publisher": "동양생명",
+  "host": "하나은행",
+  "source_url": "https://image.kebhana.com/cont/download/insdocument/leaflet/L74B14160_lf.pdf",
+  "source_pdf_sha256": "b2a6231242aac91d5f4a8f3d8637827b78f8202b9bc9628d82e416d83bc60467",
+  "product_name": "무배당엔젤안심보험",
+  "product_version": "2023-09",
+  "document_produced": "2023-08",
+  "pdf_page": 3,
+  "printed_pages": [
+    4,
+    5
+  ],
+  "retrieved_at_utc": "2026-09-17T11:34:45.531347+00:00",
+  "dataset_sha256": "a84d5c51ce2fad11a7a7af3c176782fa5b1ea3d427d17cfdd31c8307f7667d08",
+  "rows": 72,
+  "data_kind": "public_premium_examples",
+  "synthetic_rows": 0,
+  "customer_records": 0,
+  "extraction": "PyMuPDF table extraction; original page visually verified",
+  "limitations": [
+    "2023년 9월 개정 상품의 공개 예시이며 현재 판매 보험료가 아닙니다.",
+    "보험가입금액 1,000만원, 110세 만기, 월납, 주계약 기준입니다.",
+    "30/40/50세만 관측되었으며 개별 고객의 심사 결과나 할인은 없습니다.",
+    "표준형과 해약환급금일부지급형을 구분해야 합니다.",
+    "실제 계약/청구 내역, 특약별 보험료, 질병/흡연 할증 데이터가 아닙니다."
+  ]
+}

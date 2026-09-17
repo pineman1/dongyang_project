@@ -1,0 +1,2 @@
+-r requirements-premium.txt
+pytest>=8,<10

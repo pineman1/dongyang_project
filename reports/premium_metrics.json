@@ -1,0 +1,190 @@
+{
+  "model": "log_linear_tariff_regression",
+  "model_selection": "fixed_before_evaluation_no_hyperparameter_search",
+  "dataset_rows": 72,
+  "product_version": "2023-09",
+  "independent_customer_records": 0,
+  "synthetic_rows": 0,
+  "holdout": {
+    "train_ages": [
+      30,
+      50
+    ],
+    "test_ages": [
+      40
+    ],
+    "train_rows": 48,
+    "test_rows": 24,
+    "train_record_ids": [
+      "ansim-001",
+      "ansim-002",
+      "ansim-003",
+      "ansim-007",
+      "ansim-008",
+      "ansim-009",
+      "ansim-010",
+      "ansim-011",
+      "ansim-012",
+      "ansim-016",
+      "ansim-017",
+      "ansim-018",
+      "ansim-019",
+      "ansim-020",
+      "ansim-021",
+      "ansim-025",
+      "ansim-026",
+      "ansim-027",
+      "ansim-028",
+      "ansim-029",
+      "ansim-030",
+      "ansim-034",
+      "ansim-035",
+      "ansim-036",
+      "ansim-037",
+      "ansim-038",
+      "ansim-039",
+      "ansim-043",
+      "ansim-044",
+      "ansim-045",
+      "ansim-046",
+      "ansim-047",
+      "ansim-048",
+      "ansim-052",
+      "ansim-053",
+      "ansim-054",
+      "ansim-055",
+      "ansim-056",
+      "ansim-057",
+      "ansim-061",
+      "ansim-062",
+      "ansim-063",
+      "ansim-064",
+      "ansim-065",
+      "ansim-066",
+      "ansim-070",
+      "ansim-071",
+      "ansim-072"
+    ],
+    "test_record_ids": [
+      "ansim-004",
+      "ansim-005",
+      "ansim-006",
+      "ansim-013",
+      "ansim-014",
+      "ansim-015",
+      "ansim-022",
+      "ansim-023",
+      "ansim-024",
+      "ansim-031",
+      "ansim-032",
+      "ansim-033",
+      "ansim-040",
+      "ansim-041",
+      "ansim-042",
+      "ansim-049",
+      "ansim-050",
+      "ansim-051",
+      "ansim-058",
+      "ansim-059",
+      "ansim-060",
+      "ansim-067",
+      "ansim-068",
+      "ansim-069"
+    ]
+  },
+  "comparison": {
+    "log_linear_tariff_regression": {
+      "mae_krw": 169.17,
+      "rmse_krw": 205.85,
+      "mape_percent": 0.0363
+    },
+    "dummy_median": {
+      "mae_krw": 170600.0,
+      "rmse_krw": 203583.17,
+      "mape_percent": 39.4994
+    },
+    "random_forest": {
+      "mae_krw": 139669.12,
+      "rmse_krw": 166547.3,
+      "mape_percent": 21.5057
+    },
+    "linear_table_interpolation": {
+      "mae_krw": 24860.42,
+      "rmse_krw": 26322.66,
+      "mape_percent": 4.3488
+    },
+    "log_table_interpolation": {
+      "mae_krw": 169.17,
+      "rmse_krw": 205.85,
+      "mape_percent": 0.0363
+    }
+  },
+  "holdout_by_sex": {
+    "남자": {
+      "rows": 12,
+      "mae_krw": 133.84,
+      "rmse_krw": 172.57,
+      "mape_percent": 0.0289
+    },
+    "여자": {
+      "rows": 12,
+      "mae_krw": 204.5,
+      "rmse_krw": 234.45,
+      "mape_percent": 0.0437
+    }
+  },
+  "leave_one_age_out_diagnostics": [
+    {
+      "holdout_age": 30,
+      "train_ages": [
+        40,
+        50
+      ],
+      "mode": "extrapolation_diagnostic_only",
+      "test_rows": 24,
+      "mae_krw": 640.34,
+      "rmse_krw": 845.86,
+      "mape_percent": 0.1389
+    },
+    {
+      "holdout_age": 40,
+      "train_ages": [
+        30,
+        50
+      ],
+      "mode": "interpolation",
+      "test_rows": 24,
+      "mae_krw": 169.17,
+      "rmse_krw": 205.85,
+      "mape_percent": 0.0363
+    },
+    {
+      "holdout_age": 50,
+      "train_ages": [
+        30,
+        40
+      ],
+      "mode": "extrapolation_diagnostic_only",
+      "test_rows": 24,
+      "mae_krw": 1071.32,
+      "rmse_krw": 1306.37,
+      "mape_percent": 0.1413
+    }
+  ],
+  "limitations": [
+    "72 rows from one historical brochure are tariff examples, not independent customers.",
+    "Only the held-out age 40 is an interpolation check; ages 31-39/41-49 have no labels.",
+    "The 30/50 holdouts test extrapolation sensitivity, not supported production inputs.",
+    "Small same-product holdout errors do not measure current-quote or new-product accuracy.",
+    "No calibrated prediction interval is available."
+  ],
+  "dataset_sha256": "a84d5c51ce2fad11a7a7af3c176782fa5b1ea3d427d17cfdd31c8307f7667d08",
+  "generated_at_utc": "2026-09-17T11:37:53.495521+00:00",
+  "environment": {
+    "python": "3.12.8",
+    "numpy": "2.5.3",
+    "pandas": "2.3.3",
+    "scikit_learn": "1.9.1"
+  },
+  "final_training_rows": 72
+}
