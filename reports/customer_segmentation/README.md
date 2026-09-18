@@ -43,5 +43,5 @@
 
 | 원본 | SHA-256 |
 | --- | --- |
-| customer_data.csv | `5b85493c350727598f1cbe60af2e6a31007a8be5ae4069f40800adf3a6ce71c4` |
-| dongyang_products.pdf | `7c894abb5186f7d3d9807863c07bf3b079780b8c77cb5c16101c5f7bb51acea4` |
+| customer_data.csv |
+| dongyang_products.pdf |
