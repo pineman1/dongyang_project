@@ -4,7 +4,7 @@ import json
 import time
 import pandas as pd
 from dotenv import load_dotenv
-from fpdf import FPDF
+from pdf_generator import generate_proposal_pdf
 
 # ==========================================
 # 🔑 환경 변수 로드 (Google Gemini API 키)
@@ -72,34 +72,34 @@ def mock_design_api_v2(customer_info, product_name, include_rider, payment_term)
 # ==========================================
 # 🛠️ 실시간 반영 PDF 생성기
 # ==========================================
-def generate_proposal_pdf(design_result):
+#def generate_proposal_pdf(design_result):
     pdf = FPDF()
     pdf.add_page()
     
     font_path = "C:/Windows/Fonts/malgun.ttf"
-    if os.path.exists(font_path):
-        pdf.add_font("Malgun", "", font_path, uni=True)
-        pdf.set_font("Malgun", "", 18)
-    else:
-        pdf.set_font("Helvetica", "B", 18)
+#    if os.path.exists(font_path):
+#        pdf.add_font("Malgun", "", font_path, uni=True)
+#        pdf.set_font("Malgun", "", 18)
+#    else:
+#        pdf.set_font("Helvetica", "B", 18)
         
-    pdf.cell(0, 15, "[ 동양생명 AI 가입설계 제안서 ]", ln=True, align="C")
-    pdf.ln(10)
+#    pdf.cell(0, 15, "[ 동양생명 AI 가입설계 제안서 ]", ln=True, align="C")
+#    pdf.ln(10)
     
-    if os.path.exists(font_path): 
-        pdf.set_font("Malgun", "", 12)
+#    if os.path.exists(font_path): 
+#        pdf.set_font("Malgun", "", 12)
         
-    pdf.cell(0, 10, f"▶ 추천 상품명 :  {design_result['product_name']}", ln=True)
-    pdf.cell(0, 10, f"▶ 납입 기간 :  {design_result['payment_term']}", ln=True)
-    pdf.cell(0, 10, f"▶ 최종 월 보험료 :  {design_result['monthly_premium']:,} 원", ln=True)
-    pdf.ln(5)
-    pdf.cell(0, 10, f"✔ 핵심 보장 1 : {design_result['coverage_1']}", ln=True)
-    pdf.cell(0, 10, f"✔ 핵심 보장 2 : {design_result['coverage_2']}", ln=True)
+#    pdf.cell(0, 10, f"▶ 추천 상품명 :  {design_result['product_name']}", ln=True)
+#    pdf.cell(0, 10, f"▶ 납입 기간 :  {design_result['payment_term']}", ln=True)
+#    pdf.cell(0, 10, f"▶ 최종 월 보험료 :  {design_result['monthly_premium']:,} 원", ln=True)
+#   pdf.ln(5)
+ #   pdf.cell(0, 10, f"✔ 핵심 보장 1 : {design_result['coverage_1']}", ln=True)
+  #  pdf.cell(0, 10, f"✔ 핵심 보장 2 : {design_result['coverage_2']}", ln=True)
     
-    pdf.ln(20)
-    pdf.cell(0, 10, "* 본 제안서는 AI 추천 알고리즘에 의해 고객 맞춤형으로 산출된 가상의 결과물입니다.", ln=True)
+   # pdf.ln(20)
+    #pdf.cell(0, 10, "* 본 제안서는 AI 추천 알고리즘에 의해 고객 맞춤형으로 산출된 가상의 결과물입니다.", ln=True)
     
-    return bytes(pdf.output())
+    #return bytes(pdf.output())
 
 # ==========================================
 # 🧠 RAG 및 추천 로직 (Gemini 3.6 Flash 적용)
@@ -261,9 +261,13 @@ if st.session_state.get("show_tuning", False):
             st.metric(label="월 예상 납입 보험료", value=f"{calc_result['monthly_premium']:,} 원")
             st.write(f"✔ 기본 보장: {calc_result['coverage_1']}")
             st.write(f"✔ 추가 혜택: {calc_result['coverage_2']}")
-            
+        
         st.markdown("---")
-        pdf_bytes = generate_proposal_pdf(calc_result)
+        # customer_info를 함께 전달하여 제안서에 인적사항도 포함
+        pdf_bytes = generate_proposal_pdf(
+            calc_result, 
+            customer_info=st.session_state.get("last_customer_info")
+        )
         st.download_button(
             label="📥 이 조건으로 최종 가입설계서 발급하기 (PDF)",
             data=pdf_bytes,
@@ -271,7 +275,7 @@ if st.session_state.get("show_tuning", False):
             mime="application/pdf",
             use_container_width=True
         )
-
+            
 # 대화 내용 렌더링
 for message in st.session_state.messages:
     with st.chat_message(message["role"]): 
