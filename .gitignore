@@ -1,7 +1,6 @@
 # --- 우리 프로젝트 커스텀 추가 ---
 *.zip
 *_temp.pdf
-*.pdf
 desktop.ini
 .DS_Store
 
