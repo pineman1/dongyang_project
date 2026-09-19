@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_standalone_page_runs_without_llm_key_and_updates_conditions(monkeypatch):
     for key in ["OPENAI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY"]:
         monkeypatch.delenv(key, raising=False)
-    app = AppTest.from_file(str(ROOT / "premium_app.py")).run(timeout=30)
+    app = AppTest.from_file(str(ROOT / "premium_reference_app.py")).run(timeout=30)
     assert not app.exception
     assert app.metric[1].value == "265,600원 / 월"
     app.number_input[0].set_value(35).run()

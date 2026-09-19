@@ -1,5 +1,7 @@
 # 동양생명 공개 자료 기반 월 보험료 예측
 
+> 이전 공개 자료 모델의 참고 문서입니다. 현재 기본 실행 화면(`premium_app.py`)은 고객 더미데이터 상품·특약 모델로 전환되었습니다. [현재 모델 설명](README_CUSTOMER_ML.md)을 참고하세요. 아래 회귀 모델을 별도로 실행하려면 `premium_reference_app.py`를 사용합니다.
+
 나이·성별·보장 유형·납입기간·해약환급금 유형으로 월 보험료를 추정합니다. **2023년 9월 개정 「무배당 엔젤안심보험」 공개 예시표 72개**만 사용합니다. 실제 가입자 데이터나 현재 판매 견적을 학습한 모델이 아닙니다.
 
 ## 실행
@@ -11,7 +13,7 @@ Python 3.10 이상을 사용합니다. 개발 환경은 Windows / Python 3.12.8�
 
 ```powershell
 ..\venv\Scripts\python.exe -m pip install -r requirements-premium.txt
-..\venv\Scripts\python.exe -m streamlit run premium_app.py
+..\venv\Scripts\python.exe -m streamlit run premium_reference_app.py
 ```
 
 다른 컴퓨터에서 새로 시작하는 경우:
@@ -21,7 +23,7 @@ git clone --branch namuking1/insurance-premium-model https://github.com/pineman1
 cd dongyang_project
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-premium.txt
-.\.venv\Scripts\python.exe -m streamlit run premium_app.py
+.\.venv\Scripts\python.exe -m streamlit run premium_reference_app.py
 ```
 
 이하 `python`은 위 가상환경의 Python을 의미합니다. 기존 LLM 앱의 `requirements.txt` 대신 **`requirements-premium.txt`**를 사용하세요. 이 모델에는 OpenAI/Gemini API 키가 필요하지 않습니다. 기존 앱의 전체 의존성 호환성은 이번 검증 범위에 포함하지 않았습니다.
@@ -111,10 +113,10 @@ print(result["published_example_krw"])  # 35세 원문 예시 없음 -> None
 
 ## 기존 프로젝트와의 관계
 
-- 기존 `ml_model.py`: 합성 고객 데이터 기반 상품·특약 추천 모델입니다.
+- 기존 `ml_model.py`: `customer_ml`의 합성 고객 데이터 모델을 호출하는 호환 함수입니다.
 - 기존 `app.py`: Gemini/RAG 및 가상 보험료 계산식을 사용하는 세일즈 데모입니다.
 - 신규 `premium/`: 출처가 있는 공개 보험료를 학습하는 별도 회귀 모델입니다.
-- 신규 `premium_app.py`: API 키 없는 단독 실행 화면입니다.
-- 신규 `pages/1_Premium_Prediction.py`: 기존 Streamlit 앱에 추가되는 예측 페이지입니다.
+- `premium_reference_app.py`: 공개 보험료 참고 모델을 별도로 실행하는 화면입니다.
+- `premium_app.py` 및 `pages/1_Customer_Recommendation.py`: 현재는 고객 더미데이터 상품·특약 모델을 실행합니다.
 
 기존 상품 이름과 새 데이터의 정확한 상품·버전이 일치하지 않으므로, 가상 계산식을 새 모델로 조용히 대체하지 않았습니다. 실제 견적 기능으로 확장하려면 해당 상품의 최신 조건별 보험료와 가입금액별 자료부터 확보해야 합니다.

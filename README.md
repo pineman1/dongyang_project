@@ -1,13 +1,13 @@
 # dongyang_project
 
-## 월 보험료 예측 모델 — 새 개인 브랜치
+## 고객 더미데이터 기반 상품·특약 모델
 
-동양생명 **무배당 엔젤안심보험(2023.9 개정)** 공개 보험료 72개로 학습한 회귀 모델을 추가했습니다.
-현재 견적이 아닌 과거 상품표 기반 연구용 모델입니다. 기존 `customer_data.csv`는 합성 고객 데이터이며, 새 보험료 모델 학습에는 사용하지 않습니다.
+기존 venv 실행 화면을 사용자 제공 `customer_data.csv` **1,000명**으로 학습하는 상품·특약 추천 모델에 연결했습니다.
+학습 데이터에는 월 보험료 정답이 없으므로 이 화면에서는 보험료를 예측하지 않습니다.
 
-- [설치·실행·모델 설명](README_PREMIUM.md)
-- [데이터 출처와 수집 범위](data/README.md)
-- [재현 가능한 검증 결과](reports/premium_metrics.json)
+- [설치·실행·모델 설명](README_CUSTOMER_ML.md)
+- [고객 분류·정렬 분석 자료](reports/customer_segmentation/README.md)
+- [분리된 검증 데이터 평가 결과](reports/customer_ml_metrics.json)
 
 현재 작업 폴더에서 기존 `venv`로 실행:
 
@@ -17,7 +17,11 @@ cd dongyang_project
 ..\venv\Scripts\python.exe -m streamlit run premium_app.py
 ```
 
-새 모델은 **API 키 없이 실행**됩니다. 독립 실행은 `premium_app.py`, 기존 앱에서는 사이드바의 `Premium Prediction` 페이지를 사용하세요. 기존 `app.py`의 가상 보험료 계산식은 이 모델과 별개입니다.
+**API 키 없이 실행**됩니다. `premium_app.py`는 기존 명령 호환용이며, `customer_app.py`로 실행해도 같은 화면입니다. 기존 앱에서는 사이드바의 `Customer Recommendation` 페이지를 사용하세요. `ml_model.get_recommendation()`도 같은 고객 모델을 사용합니다.
+
+ZIP의 정렬 CSV 6개는 같은 고객의 순서만 다르므로, 일치 여부를 검증한 뒤 한 표본만 학습합니다. 분석ID 및 상품·특약 정답에서 파생된 열은 학습 입력에서 제외합니다.
+
+이전 공개 보험료 예측 화면은 `premium_reference_app.py`로 보관했습니다. 별도 실행과 과거 자료 설명은 [README_PREMIUM.md](README_PREMIUM.md)에 있습니다.
 
 ---
 
