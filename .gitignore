@@ -223,3 +223,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Rebuildable premium-model artifacts and locally inspected source PDFs
+artifacts/
+*.joblib
+data/raw/
+.qa/

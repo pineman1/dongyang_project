@@ -1,5 +1,32 @@
 # dongyang_project
 
+## 고객 더미데이터 기반 상품·특약 모델
+
+기존 venv 실행 화면을 사용자 제공 `customer_data.csv` **1,000명**으로 학습하는 상품·특약 추천 모델에 연결했습니다.
+학습 데이터에는 월 보험료 정답이 없으므로 이 화면에서는 보험료를 예측하지 않습니다.
+
+- [설치·실행·모델 설명](README_CUSTOMER_ML.md)
+- [고객 분류·정렬 분석 자료](reports/customer_segmentation/README.md)
+- [분리된 검증 데이터 평가 결과](reports/customer_ml_metrics.json)
+
+현재 작업 폴더에서 기존 `venv`로 실행:
+
+```powershell
+cd dongyang_project
+..\venv\Scripts\python.exe -m pip install -r requirements-premium.txt
+..\venv\Scripts\python.exe -m streamlit run premium_app.py
+```
+
+**API 키 없이 실행**됩니다. `premium_app.py`는 기존 명령 호환용이며, `customer_app.py`로 실행해도 같은 화면입니다. 기존 앱에서는 사이드바의 `Customer Recommendation` 페이지를 사용하세요. `ml_model.get_recommendation()`도 같은 고객 모델을 사용합니다.
+
+ZIP의 정렬 CSV 6개는 같은 고객의 순서만 다르므로, 일치 여부를 검증한 뒤 한 표본만 학습합니다. 분석ID 및 상품·특약 정답에서 파생된 열은 학습 입력에서 제외합니다.
+
+입력한 9개 고객 조건이 모두 일치하는 학습 자료가 없으면 **자료가 없음**을 표시합니다. 특약은 선택한 상품에서도 같은 조건의 학습 행이 있어야 표시하며, 자료가 없을 때 점수나 후속 설명을 생성하지 않습니다.
+
+이전 공개 보험료 예측 화면은 `premium_reference_app.py`로 보관했습니다. 별도 실행과 과거 자료 설명은 [README_PREMIUM.md](README_PREMIUM.md)에 있습니다.
+
+---
+
 # 💼 동양생명 하이브리드 세일즈 어시스턴트 (AI FC Assistant)
 
 ## 📌 프로젝트 개요
@@ -135,11 +162,11 @@ git pull origin main
 Bash
 git add .
 git commit -m "수정 내용 요약"
-git push origin main
+git push -u origin HEAD
 
 💻 애플리케이션 실행 방법
 로컬에서 앱이 정상적으로 구동되는지 테스트하려면 터미널에 아래 명령어를 입력합니다.
 
 Bash
 streamlit run app.py
-
+```

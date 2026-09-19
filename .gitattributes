@@ -1,0 +1,5 @@
+# Preserve the checksum of the public dataset on Windows checkouts.
+data/*.csv text eol=lf
+data/*.json text eol=lf
+reports/*.csv text eol=lf
+reports/*.json text eol=lf

@@ -1,0 +1,111 @@
+{
+  "dataset": {
+    "source": "customer_data.csv",
+    "source_sha256": "5b85493c350727598f1cbe60af2e6a31007a8be5ae4069f40800adf3a6ce71c4",
+    "canonical_sha256": "65812f11a035d791e538bad936605b1c86ee8cc8aedfedfb017c0353eb2acd25",
+    "rows": 1000,
+    "sorted_views": 1,
+    "exact_duplicate_rows": 15,
+    "feature_groups": 970,
+    "synthetic": true
+  },
+  "features": [
+    "나이",
+    "성별",
+    "연소득_만원",
+    "직업위험등급",
+    "결혼여부",
+    "자녀수",
+    "흡연여부",
+    "만성질환",
+    "가족력"
+  ],
+  "evaluation_scope": "underlying_classifier_before_no_data_policy",
+  "serving_policy": {
+    "customer": "exact_match_on_all_nine_features",
+    "rider": "exact_feature_match_within_selected_product",
+    "no_data_message": "자료가 없음",
+    "holdout_profile_coverage": 0.0
+  },
+  "environment": {
+    "python": "3.12.8",
+    "pandas": "2.3.3",
+    "scikit_learn": "1.9.1"
+  },
+  "excluded_from_features": [
+    "가입상품",
+    "가입특약",
+    "분석ID",
+    "상품분류",
+    "특약상태",
+    "특약가입여부"
+  ],
+  "model": "random_forest_product_then_product_specific_rider",
+  "model_selection": "fixed_parameters_no_holdout_tuning",
+  "random_state": 42,
+  "split": {
+    "method": "GroupShuffleSplit by all nine raw customer features",
+    "test_group_fraction": 0.2,
+    "training_rows": 796,
+    "test_rows": 204,
+    "training_groups": 776,
+    "test_groups": 194,
+    "overlapping_groups": 0
+  },
+  "metrics": {
+    "product_accuracy": 0.5343137254901961,
+    "product_macro_f1": 0.501186116926458,
+    "rider_accuracy_given_true_product": 0.7794117647058824,
+    "product_and_rider_accuracy": 0.4068627450980392
+  },
+  "majority_baseline": {
+    "product_accuracy": 0.3872549019607843,
+    "product_and_rider_accuracy": 0.21568627450980393
+  },
+  "product_classification": {
+    "수호천사 암/건강보험": {
+      "precision": 0.5529411764705883,
+      "recall": 0.5949367088607594,
+      "f1-score": 0.573170731707317,
+      "support": 79.0
+    },
+    "수호천사 간편심사(유병자)보험": {
+      "precision": 0.6,
+      "recall": 0.6792452830188679,
+      "f1-score": 0.6371681415929203,
+      "support": 53.0
+    },
+    "수호천사 우리가족 종신보험": {
+      "precision": 0.35294117647058826,
+      "recall": 0.375,
+      "f1-score": 0.36363636363636365,
+      "support": 32.0
+    },
+    "수호천사 행복 연금보험": {
+      "precision": 0.56,
+      "recall": 0.35,
+      "f1-score": 0.4307692307692308,
+      "support": 40.0
+    },
+    "accuracy": 0.5343137254901961,
+    "macro avg": {
+      "precision": 0.5164705882352941,
+      "recall": 0.49979549796990685,
+      "f1-score": 0.501186116926458,
+      "support": 204.0
+    },
+    "weighted avg": {
+      "precision": 0.5351787773933103,
+      "recall": 0.5343137254901961,
+      "f1-score": 0.5290075106688024,
+      "support": 204.0
+    }
+  },
+  "limitations": [
+    "Synthetic labels were sampled by generate_data.py, not observed customer decisions.",
+    "Scores are uncalibrated model outputs, not real purchase probabilities.",
+    "The CSV has no premium target; this model does not predict monthly premiums.",
+    "This is one grouped holdout on 1,000 synthetic rows, not external validation."
+  ],
+  "final_training_rows": 1000
+}
