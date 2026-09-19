@@ -15,7 +15,7 @@ def test_dummy_model_is_default_on_every_entrypoint(monkeypatch, entry):
         monkeypatch.delenv(key, raising=False)
     app = AppTest.from_file(str(ROOT / entry)).run(timeout=60)
     assert not app.exception
-    assert app.title[0].value == "고객 조건별 상품·특약 추천"
+    assert [tab.label for tab in app.tabs] == ["상품·특약 추천", "고객 분류·정렬", "모델 검증"]
     assert any(element.value == NO_DATA for element in app.info)
     assert not any(element.label in ["추천 가입상품", "추천 특약"] for element in app.metric)
     assert any("1,000" in element.value for element in app.sidebar.markdown)
@@ -57,14 +57,16 @@ def test_conditions_riders_and_filters_update():
 
 def test_known_to_unknown_to_known_clears_and_restores_predictions():
     app = AppTest.from_file(str(ROOT / "customer_app.py")).run(timeout=60)
-    set_known_customer(app)
+    next(element for element in app.button if element.label == "학습 고객 예시 불러오기 ↗").click().run()
+    assert not app.exception
     assert any(element.label == "추천 가입상품" for element in app.metric)
     next(element for element in app.number_input if element.label == "연소득 (만원)").set_value(3500).run()
     assert not app.exception
     assert any(element.value == NO_DATA for element in app.info)
     assert not any(element.label in ["추천 가입상품", "추천 특약"] for element in app.metric)
     assert not any(element.label == "특약을 확인할 상품" for element in app.selectbox)
-    set_known_customer(app)
+    next(element for element in app.button if element.label == "학습 고객 예시 불러오기 ↗").click().run()
+    assert not app.exception
     assert any(element.label == "추천 가입상품" for element in app.metric)
 
 
