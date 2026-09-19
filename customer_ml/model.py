@@ -9,6 +9,7 @@ from sklearn.preprocessing import OneHotEncoder
 from .data import CATEGORIES, FEATURES, NUMERIC, load_dataset, validate_features, validate_training
 
 NOTICE = "고객 더미데이터의 가입 패턴을 학습한 예시입니다. 모델 점수는 실제 가입 확률이나 보장 적합성이 아닙니다."
+NO_DATA = "자료가 없음"
 
 
 def make_classifier() -> Pipeline:
@@ -30,6 +31,17 @@ class CustomerPredictor:
             product: make_classifier().fit(group[FEATURES], group["가입특약"])
             for product, group in self.data.groupby("가입상품", sort=True)
         }
+        self.profiles = set(self.data[FEATURES].itertuples(index=False, name=None))
+        self.rider_profiles = {
+            product: set(group[FEATURES].itertuples(index=False, name=None))
+            for product, group in self.data.groupby("가입상품", sort=True)
+        }
+
+    def _no_data(self) -> dict:
+        return {"available": False, "rider_available": False, "message": NO_DATA,
+                "product": None, "product_score": None, "rider_product": None,
+                "rider": None, "rider_score": None, "product_ranking": [], "rider_ranking": [],
+                "training_rows": len(self.data), "synthetic": True, "notice": NOTICE}
 
     @staticmethod
     def _ranking(model, inputs) -> list[dict]:
@@ -38,18 +50,37 @@ class CustomerPredictor:
         return sorted(rows, key=lambda row: (-row["score"], row["label"]))
 
     def recommend(self, customer: dict, product: str | None = None) -> dict:
-        inputs = validate_features(pd.DataFrame([customer]))
+        try:
+            inputs = validate_features(pd.DataFrame([customer]))
+        except ValueError:
+            return self._no_data()
+        profile = tuple(inputs.iloc[0][FEATURES])
+        if profile not in self.profiles or (product is not None and product not in self.rider_models):
+            return self._no_data()
         products = self._ranking(self.main_model, inputs)
         selected = product if product is not None else products[0]["label"]
-        if selected not in self.rider_models:
-            raise ValueError("특약을 확인할 상품이 학습 데이터에 없습니다.")
-        riders = self._ranking(self.rider_models[selected], inputs)
-        return {"product": products[0]["label"], "product_score": products[0]["score"],
-                "rider_product": selected, "rider": riders[0]["label"], "rider_score": riders[0]["score"],
+        riders = self._ranking(self.rider_models[selected], inputs) if profile in self.rider_profiles[selected] else []
+        return {"available": True, "rider_available": bool(riders), "message": "" if riders else NO_DATA,
+                "product": products[0]["label"], "product_score": products[0]["score"],
+                "rider_product": selected, "rider": riders[0]["label"] if riders else None,
+                "rider_score": riders[0]["score"] if riders else None,
                 "product_ranking": products, "rider_ranking": riders,
                 "training_rows": len(self.data), "synthetic": True, "notice": NOTICE}
 
     def predict_batch(self, frame: pd.DataFrame, products=None) -> pd.DataFrame:
+        """Apply the same no-data policy as interactive recommendations."""
+        selected = [None] * len(frame) if products is None else list(products)
+        if len(selected) != len(frame):
+            raise ValueError("상품 수와 고객 수가 다릅니다.")
+        results = [self.recommend(row.to_dict(), product) for (_, row), product in zip(frame.iterrows(), selected)]
+        return pd.DataFrame([{
+            "product": result["rider_product"] if products is not None else result["product"],
+            "rider": result["rider"], "available": result["available"],
+            "rider_available": result["rider_available"], "message": result["message"],
+        } for result in results], columns=["product", "rider", "available", "rider_available", "message"])
+
+    def _predict_for_evaluation(self, frame: pd.DataFrame, products=None) -> pd.DataFrame:
+        """Offline classifier diagnostics only, before the serving no-data policy."""
         inputs = validate_features(frame).reset_index(drop=True)
         chosen = self.main_model.predict(inputs) if products is None else list(products)
         if len(chosen) != len(inputs):

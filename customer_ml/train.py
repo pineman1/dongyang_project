@@ -28,10 +28,10 @@ def split_dataset(data: pd.DataFrame):
 def evaluate(dataset: CustomerDataset) -> tuple[dict, pd.DataFrame]:
     train, test, groups = split_dataset(dataset.data)
     predictor = CustomerPredictor(train)
-    predictions = predictor.predict_batch(test)
+    predictions = predictor._predict_for_evaluation(test)
     actual = test.reset_index(drop=True)
     # Conditional rider quality measures the second stage using the known product.
-    conditional = predictor.predict_batch(test, products=test["가입상품"])
+    conditional = predictor._predict_for_evaluation(test, products=test["가입상품"])
     product = train["가입상품"].mode().iloc[0]
     rider = train.loc[train["가입상품"] == product, "가입특약"].mode().iloc[0]
     product_ok = predictions["product"] == actual["가입상품"]
@@ -47,6 +47,13 @@ def evaluate(dataset: CustomerDataset) -> tuple[dict, pd.DataFrame]:
                 "product_and_rider_accuracy": float(((actual["가입상품"] == product) & (actual["가입특약"] == rider)).mean())}
     report = {
         "dataset": dataset.metadata, "features": FEATURES,
+        "evaluation_scope": "underlying_classifier_before_no_data_policy",
+        "serving_policy": {
+            "customer": "exact_match_on_all_nine_features",
+            "rider": "exact_feature_match_within_selected_product",
+            "no_data_message": "자료가 없음",
+            "holdout_profile_coverage": float(test[FEATURES].apply(tuple, axis=1).isin(predictor.profiles).mean()),
+        },
         "environment": {"python": platform.python_version(), "pandas": pd.__version__,
                         "scikit_learn": sklearn.__version__},
         "excluded_from_features": ["가입상품", "가입특약", "분석ID", "상품분류", "특약상태", "특약가입여부"],

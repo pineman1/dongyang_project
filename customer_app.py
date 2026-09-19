@@ -4,12 +4,13 @@ import pandas as pd
 import streamlit as st
 
 from customer_ml.data import CATEGORIES, DATA_PATH, PRODUCT_RIDERS, classified_view, read_dataset
-from customer_ml.model import NOTICE, CustomerPredictor
+from customer_ml.model import NOTICE, NO_DATA, CustomerPredictor
 from customer_ml.train import evaluate
 
 
 @st.cache_resource(max_entries=4)
 def get_resources(contents: bytes, filename: str):
+    """Cache models with exact-profile availability checks and diagnostic metrics."""
     dataset = read_dataset(contents, filename)
     report, _ = evaluate(dataset)
     return dataset, CustomerPredictor(dataset.data), report
@@ -34,9 +35,17 @@ def recommendations(predictor):
     result = predictor.recommend(customer)
     with output:
         st.subheader("상품·특약 예측")
+        if not result["available"]:
+            st.info(NO_DATA)
+            st.caption("입력한 9개 고객 조건이 모두 일치하는 학습 자료가 없습니다.")
+            return
         st.metric("추천 가입상품", result["product"])
-        st.metric("추천 특약", result["rider"])
-        st.caption(f"상품 모델 점수 {result['product_score']:.1%} · 추천 상품 내 특약 모델 점수 {result['rider_score']:.1%}")
+        st.metric("추천 특약", result["rider"] if result["rider_available"] else NO_DATA)
+        st.caption(f"상품 모델 점수 {result['product_score']:.1%}")
+        if result["rider_available"]:
+            st.caption(f"추천 상품 내 특약 모델 점수 {result['rider_score']:.1%}")
+        else:
+            st.caption("추천 상품에서 입력 조건과 일치하는 특약 학습 자료가 없습니다.")
         if result["rider"] == "특약 없음":
             st.info("이 예시 데이터의 연금상품은 특약 없음으로 생성되어 있습니다.")
         elif result["rider"] == "선택 안함":
@@ -48,6 +57,9 @@ def recommendations(predictor):
         product = st.selectbox("특약을 확인할 상품", ["추천 상품", *PRODUCT_RIDERS])
         rider_result = result if product == "추천 상품" else predictor.recommend(customer, product=product)
         st.caption(f"특약 비교 대상: {rider_result['rider_product']}")
+        if not rider_result["rider_available"]:
+            st.info(NO_DATA)
+            return
         riders = pd.DataFrame(rider_result["rider_ranking"]).rename(columns={"label": "가입특약", "score": "모델 점수"})
         st.dataframe(riders, hide_index=True, width="stretch",
                      column_config={"모델 점수": st.column_config.NumberColumn(format="percent")})
@@ -72,6 +84,9 @@ def data_explorer(dataset):
     sort = st.selectbox("정렬 기준", ["나이", "흡연여부", "결혼여부", "자녀수", "가입상품", "가입특약"])
     view = view.sort_values([sort] + ([] if sort == "나이" else ["나이"]), kind="stable")
     st.caption(f"선택한 고객 {len(view):,}명 / 학습 고객 {len(dataset.data):,}명 · 60대는 60~65세")
+    if view.empty:
+        st.info(NO_DATA)
+        return
     st.dataframe(view, hide_index=True, width="stretch")
     st.download_button("선택한 고객 CSV 다운로드", view.to_csv(index=False).encode("utf-8-sig"),
                        "filtered_customers.csv", "text/csv")
@@ -113,7 +128,9 @@ def main():
     with validation_tab:
         split = report["split"]
         st.write(f"동일한 고객 조건은 같은 그룹으로 묶어 학습 {split['training_rows']:,}명 / 검증 {split['test_rows']:,}명으로 분리했습니다.")
-        st.caption("아래 점수는 분리한 검증 데이터의 결과입니다. 화면 예측 모델은 검증 후 전체 고객으로 다시 학습했습니다.")
+        st.caption("아래는 ‘자료가 없음’ 제한을 적용하기 전 분류기 자체의 진단 점수입니다. 화면 예측 모델은 전체 고객으로 다시 학습했습니다.")
+        st.write("실제 추천 화면은 고객 조건 9개가 모두 일치해야 결과를 표시하며, 특약은 선택한 상품 안에서도 같은 조건의 자료가 있어야 합니다.")
+        st.caption(f"이 검증 세트는 새로운 조건만 분리했으므로, 학습 자료 일치율은 {report['serving_policy']['holdout_profile_coverage']:.1%}입니다. 실제 표시 규칙에서는 모두 ‘자료가 없음’에 해당합니다.")
         metrics = report["metrics"]
         a, b, c = st.columns(3)
         a.metric("상품 예측 정확도", f"{metrics['product_accuracy']:.1%}")

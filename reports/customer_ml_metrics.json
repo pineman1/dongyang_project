@@ -20,6 +20,13 @@
     "만성질환",
     "가족력"
   ],
+  "evaluation_scope": "underlying_classifier_before_no_data_policy",
+  "serving_policy": {
+    "customer": "exact_match_on_all_nine_features",
+    "rider": "exact_feature_match_within_selected_product",
+    "no_data_message": "자료가 없음",
+    "holdout_profile_coverage": 0.0
+  },
   "environment": {
     "python": "3.12.8",
     "pandas": "2.3.3",
