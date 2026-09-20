@@ -1,31 +1,11 @@
 # dongyang_project
 
-## 고객 더미데이터 기반 상품·특약 모델
+Streamlit Cloud 주소 : https://dongyang-projectwithai.streamlit.app/
 
-기존 venv 실행 화면을 사용자 제공 `customer_data.csv` **1,000명**으로 학습하는 상품·특약 추천 모델에 연결했습니다.
-학습 데이터에는 월 보험료 정답이 없으므로 이 화면에서는 보험료를 예측하지 않습니다.
-
-- [설치·실행·모델 설명](README_CUSTOMER_ML.md)
-- [고객 분류·정렬 분석 자료](reports/customer_segmentation/README.md)
-- [분리된 검증 데이터 평가 결과](reports/customer_ml_metrics.json)
-
-현재 작업 폴더에서 기존 `venv`로 실행:
-
-```powershell
-cd dongyang_project
-..\venv\Scripts\python.exe -m pip install -r requirements-premium.txt
-..\venv\Scripts\python.exe -m streamlit run premium_app.py
-```
-
-**API 키 없이 실행**됩니다. `premium_app.py`는 기존 명령 호환용이며, `customer_app.py`로 실행해도 같은 화면입니다. 기존 앱에서는 사이드바의 `Customer Recommendation` 페이지를 사용하세요. `ml_model.get_recommendation()`도 같은 고객 모델을 사용합니다.
-
-ZIP의 정렬 CSV 6개는 같은 고객의 순서만 다르므로, 일치 여부를 검증한 뒤 한 표본만 학습합니다. 분석ID 및 상품·특약 정답에서 파생된 열은 학습 입력에서 제외합니다.
-
-입력한 9개 고객 조건이 모두 일치하는 학습 자료가 없으면 **자료가 없음**을 표시합니다. 특약은 선택한 상품에서도 같은 조건의 학습 행이 있어야 표시하며, 자료가 없을 때 점수나 후속 설명을 생성하지 않습니다.
-
-이전 공개 보험료 예측 화면은 `premium_reference_app.py`로 보관했습니다. 별도 실행과 과거 자료 설명은 [README_PREMIUM.md](README_PREMIUM.md)에 있습니다.
-
----
+로컬 환경 최초 실행 방법 : 
+feature/week3의 파일을 받은 후 .env 파일을 만들어 개인 구글 제미나이 API key를 등록한 후 visual studio code 의 터미널에서 아래 명령어를 실행합니다(GOOGLE_API_KEY = 본인의 api 키 입력)
+-m pip install -r requirements-premium.txt
+-m streamlit run premium_app.py
 
 # 💼 동양생명 하이브리드 세일즈 어시스턴트 (AI FC Assistant)
 
@@ -53,6 +33,7 @@ ZIP의 정렬 CSV 6개는 같은 고객의 순서만 다르므로, 일치 여부
 
 
 ## 고객 페르소나(핵심 이용 타겟)
+
 1. 이준호 (45세, 사무직) : "호구 잡히기 싫은 방어형 직장인"
 
 Target Audience: 출퇴근 시간이 길고 재테크/금융 지식에 밝은 고관여 40대 실무진.
@@ -70,7 +51,9 @@ Marketing Strategy:
 핵심 카피: "내 보험료, 설계사 수당으로 얼마나 빠져나가는지 계산해 보셨나요? AI로 '진짜 내 보험 원가'를 확인하세요."
 
 CTA: 나이/소득만 입력하는 심플 UI ➡️ '무료로 AI 설계서 먼저 받아보기'
+
 --------------------------------------------------------------------------------------------------------------------------------
+
 2. 박미영 (58세, 식당 운영) : "가입 거절 트라우마를 겪은 유병자"
 Target Audience: 고혈압/당뇨 등을 앓고 있어 오프라인에서 보험 심사 거절을 겪어본 5060 자영업자.
 
@@ -87,7 +70,9 @@ Marketing Strategy:
 핵심 카피: "혈압약 5년째 드시고 계신다고요? 묻지도 따지지도 않고 내 폰에서 몰래 '가입 승인' 먼저 받아보세요."
 
 CTA: 직관적이고 큰 버튼 ➡️ '내 가입 가능 여부 즉시 확인하기'
+
 -----------------------------------------------------------------------------------------------------------------------------------
+
 3. 최동만 (65세, 은퇴자) : "전문가의 더블 체크가 필요한 시니어"
 Target Audience: 아침 뉴스앱을 정독하는 액티브 시니어로, 기계의 편리함은 알지만 최종 결정은 '전문가'에게 맡기길 원함.
 
@@ -104,7 +89,9 @@ Marketing Strategy:
 핵심 카피: "첨단 AI가 1차로 찾고, 20년 차 동양생명 수석 설계사가 한 번 더 검증합니다. 빈틈없는 2중 안전장치!"
 
 CTA: AI 분석 화면 하단 ➡️ 'AI 결과 바탕으로 우수 설계사 무료 배정받기'
+
 -----------------------------------------------------------------------------------------------------------------------------
+
 4. 정수진 (32세, 프리랜서) : "스마트폰으로 끝내고 싶은 딩크족"
 Target Audience: 밤늦게 숏폼을 즐겨보며, '콜 포비아'가 있어 대면/전화 상담을 극도로 꺼리는 2030 세대 (토스/뱅크샐러드 헤비 유저).
 
@@ -121,6 +108,37 @@ Marketing Strategy:
 핵심 카피: "기 빨리는 설계사 스몰토크 극혐이시죠? 내 맘대로 안 쓰는 특약 싹 다 빼고, 카톡으로 1분 만에 가입 끝내세요."
 
 CTA: ➡️ '설계사 없이 내 보험 직접 DIY 하기' (간편결제로 즉시 연결)
+
+-----------------------------------------------------------------------------------------------------------------------
+
+
+추가 설명(개발 중) : 
+## 고객 더미데이터 기반 상품·특약 모델
+
+기존 venv 실행 화면을 사용자 제공 `customer_data.csv` **1,000명**으로 학습하는 상품·특약 추천 모델에 연결했습니다.
+학습 데이터에는 월 보험료 정답이 없으므로 이 화면에서는 보험료를 예측하지 않습니다.
+
+- [설치·실행·모델 설명](README_CUSTOMER_ML.md)
+- [고객 분류·정렬 분석 자료](reports/customer_segmentation/README.md)
+- [분리된 검증 데이터 평가 결과](reports/customer_ml_metrics.json)
+
+현재 작업 폴더에서 기존 `venv`로 실행:
+
+```powershell
+cd dongyang_project
+..\venv\Scripts\python.exe -m pip install -r requirements-premium.txt
+..\venv\Scripts\python.exe -m streamlit run premium_app.py
+```
+
+**API 키 없이 실행**됩니다. `premium_app.py`는 기존 명령 호환용이며, `customer_app.py`로 실행해도 같은 화면입니다. 기존 앱에서는 사이드바의 `Customer Recommendation` 페이지를 사용하세요. `ml_model.get_recommendation()`도 같은 고객 모델을 사용합니다.
+
+ZIP의 정렬 CSV 6개는 같은 고객의 순서만 다르므로, 일치 여부를 검증한 뒤 한 표본만 학습합니다. 분석ID 및 상품·특약 정답에서 파생된 열은 학습 입력에서 제외합니다.
+
+입력한 9개 고객 조건이 모두 일치하는 학습 자료가 없으면 **자료가 없음**을 표시합니다. 특약은 선택한 상품에서도 같은 조건의 학습 행이 있어야 표시하며, 자료가 없을 때 점수나 후속 설명을 생성하지 않습니다.
+
+이전 공개 보험료 예측 화면은 `premium_reference_app.py`로 보관했습니다. 별도 실행과 과거 자료 설명은 [README_PREMIUM.md](README_PREMIUM.md)에 있습니다.
+
+---
 
 
 ## 🚀 로컬 환경 실행 방법
