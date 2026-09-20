@@ -4,7 +4,11 @@ Streamlit Cloud 주소 : https://dongyang-projectwithai.streamlit.app/
 
 로컬 환경 최초 실행 방법 : 
 feature/week3의 파일을 받은 후 .env 파일을 만들어 개인 구글 제미나이 API key를 등록한 후 visual studio code 의 터미널에서 아래 명령어를 실행합니다(GOOGLE_API_KEY = 본인의 api 키 입력)
+
+
 -m pip install -r requirements-premium.txt
+
+
 -m streamlit run premium_app.py
 
 # 💼 동양생명 하이브리드 세일즈 어시스턴트 (AI FC Assistant)
