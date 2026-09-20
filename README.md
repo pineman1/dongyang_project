@@ -32,7 +32,7 @@ feature/week3의 파일을 받은 후 .env 파일을 만들어 개인 구글 제
 ## 💻 기술 스택
 * **Language:** Python
 * **Frontend:** Streamlit
-* **AI / ML:** OpenAI API (gpt-4o-mini), LangChain, Scikit-learn (RandomForest)
+* **AI / ML:** gpt-3.5-flash, LangChain, Scikit-learn (RandomForest)
 * **Data / Doc:** Pandas, PyMuPDF, FPDF2
 
 
