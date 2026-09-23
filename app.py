@@ -79,7 +79,7 @@ with st.sidebar:
         st.session_state.logged_in = False
         st.rerun()
 
-st.set_page_config(page_title="동양생명 AI FC 어시스턴트", layout="wide")
+#st.set_page_config(page_title="동양생명 AI FC 어시스턴트", layout="wide")
 st.title("💼 동양생명 하이브리드 세일즈 어시스턴트")
 
 PDF_FILE_PATH = "dongyang_products.pdf"
