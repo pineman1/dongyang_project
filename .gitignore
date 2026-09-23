@@ -227,5 +227,10 @@ __marimo__/
 # Rebuildable premium-model artifacts and locally inspected source PDFs
 artifacts/
 *.joblib
+!artifacts/
+artifacts/*
+!artifacts/customer_ml/
+artifacts/customer_ml/*
+!artifacts/customer_ml/model.joblib
 data/raw/
 .qa/

@@ -1,12 +1,12 @@
 {
   "dataset": {
     "source": "customer_data.csv",
-    "source_sha256": "5b85493c350727598f1cbe60af2e6a31007a8be5ae4069f40800adf3a6ce71c4",
-    "canonical_sha256": "65812f11a035d791e538bad936605b1c86ee8cc8aedfedfb017c0353eb2acd25",
-    "rows": 1000,
+    "source_sha256": "6180a2e8b167dc68a99c88de3f724fef25082325970b73ce0f819b8a693f96b9",
+    "canonical_sha256": "99c66d6d6948e199566720c482777184e90eafcedd87d3c8415788755ce5b620",
+    "rows": 5000,
     "sorted_views": 1,
-    "exact_duplicate_rows": 15,
-    "feature_groups": 970,
+    "exact_duplicate_rows": 230,
+    "feature_groups": 4367,
     "synthetic": true
   },
   "features": [
@@ -20,12 +20,13 @@
     "만성질환",
     "가족력"
   ],
-  "evaluation_scope": "underlying_classifier_before_no_data_policy",
+  "evaluation_scope": "serving_classifier_with_predict_proba_fallback",
   "serving_policy": {
-    "customer": "exact_match_on_all_nine_features",
-    "rider": "exact_feature_match_within_selected_product",
+    "customer": "validated_features_then_highest_predict_proba",
+    "rider": "highest_predict_proba_within_selected_product",
     "no_data_message": "자료가 없음",
-    "holdout_profile_coverage": 0.0
+    "holdout_prediction_coverage": 1.0,
+    "holdout_exact_profile_coverage": 0.0
   },
   "environment": {
     "python": "3.12.8",
@@ -41,71 +42,114 @@
     "특약가입여부"
   ],
   "model": "random_forest_product_then_product_specific_rider",
-  "model_selection": "fixed_parameters_no_holdout_tuning",
+  "model_selection": "nested_grouped_validation_on_training_partition",
   "random_state": 42,
+  "selected_params": {
+    "n_estimators": 160,
+    "max_depth": 9,
+    "min_samples_leaf": 4
+  },
+  "tuning_candidates": [
+    {
+      "params": {
+        "n_estimators": 160,
+        "max_depth": 9,
+        "min_samples_leaf": 4
+      },
+      "product_accuracy": 0.5410447761194029,
+      "product_and_rider_accuracy": 0.4228855721393035
+    },
+    {
+      "params": {
+        "n_estimators": 240,
+        "max_depth": 12,
+        "min_samples_leaf": 2
+      },
+      "product_accuracy": 0.5261194029850746,
+      "product_and_rider_accuracy": 0.4154228855721393
+    },
+    {
+      "params": {
+        "n_estimators": 320,
+        "max_depth": 16,
+        "min_samples_leaf": 1
+      },
+      "product_accuracy": 0.4689054726368159,
+      "product_and_rider_accuracy": 0.3694029850746269
+    }
+  ],
   "split": {
     "method": "GroupShuffleSplit by all nine raw customer features",
     "test_group_fraction": 0.2,
-    "training_rows": 796,
-    "test_rows": 204,
-    "training_groups": 776,
-    "test_groups": 194,
+    "training_rows": 3986,
+    "test_rows": 1014,
+    "training_groups": 3493,
+    "test_groups": 874,
     "overlapping_groups": 0
   },
   "metrics": {
-    "product_accuracy": 0.5343137254901961,
-    "product_macro_f1": 0.501186116926458,
-    "rider_accuracy_given_true_product": 0.7794117647058824,
-    "product_and_rider_accuracy": 0.4068627450980392
+    "product_accuracy": 0.5710059171597633,
+    "product_macro_f1": 0.555997728202713,
+    "rider_accuracy_given_true_product": 0.8116370808678501,
+    "product_and_rider_accuracy": 0.45660749506903353
+  },
+  "legacy_params_holdout": {
+    "product_accuracy": 0.5710059171597633,
+    "product_and_rider_accuracy": 0.45660749506903353
+  },
+  "one_thousand_training_rows_comparison": {
+    "training_rows": 1000,
+    "product_accuracy": 0.5493096646942801,
+    "product_and_rider_accuracy": 0.4378698224852071
   },
   "majority_baseline": {
-    "product_accuracy": 0.3872549019607843,
-    "product_and_rider_accuracy": 0.21568627450980393
+    "product_accuracy": 0.33925049309664695,
+    "product_and_rider_accuracy": 0.1903353057199211
   },
   "product_classification": {
     "수호천사 암/건강보험": {
-      "precision": 0.5529411764705883,
-      "recall": 0.5949367088607594,
-      "f1-score": 0.573170731707317,
-      "support": 79.0
+      "precision": 0.5432692307692307,
+      "recall": 0.6569767441860465,
+      "f1-score": 0.5947368421052631,
+      "support": 344.0
     },
     "수호천사 간편심사(유병자)보험": {
-      "precision": 0.6,
-      "recall": 0.6792452830188679,
-      "f1-score": 0.6371681415929203,
-      "support": 53.0
+      "precision": 0.604982206405694,
+      "recall": 0.6463878326996197,
+      "f1-score": 0.625,
+      "support": 263.0
     },
     "수호천사 우리가족 종신보험": {
-      "precision": 0.35294117647058826,
-      "recall": 0.375,
-      "f1-score": 0.36363636363636365,
-      "support": 32.0
+      "precision": 0.5944444444444444,
+      "recall": 0.4841628959276018,
+      "f1-score": 0.5336658354114713,
+      "support": 221.0
     },
     "수호천사 행복 연금보험": {
-      "precision": 0.56,
-      "recall": 0.35,
-      "f1-score": 0.4307692307692308,
-      "support": 40.0
+      "precision": 0.5547445255474452,
+      "recall": 0.40860215053763443,
+      "f1-score": 0.47058823529411764,
+      "support": 186.0
     },
-    "accuracy": 0.5343137254901961,
+    "accuracy": 0.5710059171597633,
     "macro avg": {
-      "precision": 0.5164705882352941,
-      "recall": 0.49979549796990685,
-      "f1-score": 0.501186116926458,
-      "support": 204.0
+      "precision": 0.5743601017917037,
+      "recall": 0.5490324058377256,
+      "f1-score": 0.555997728202713,
+      "support": 1014.0
     },
     "weighted avg": {
-      "precision": 0.5351787773933103,
-      "recall": 0.5343137254901961,
-      "f1-score": 0.5290075106688024,
-      "support": 204.0
+      "precision": 0.5725341613839843,
+      "recall": 0.5710059171597633,
+      "f1-score": 0.566502993170465,
+      "support": 1014.0
     }
   },
   "limitations": [
     "Synthetic labels were sampled by generate_data.py, not observed customer decisions.",
     "Scores are uncalibrated model outputs, not real purchase probabilities.",
     "The CSV has no premium target; this model does not predict monthly premiums.",
-    "This is one grouped holdout on 1,000 synthetic rows, not external validation."
+    "This is one grouped holdout on synthetic rows, not external validation."
   ],
-  "final_training_rows": 1000
+  "final_training_rows": 5000
 }

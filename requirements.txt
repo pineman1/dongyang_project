@@ -7,7 +7,8 @@ langchain-text-splitters
 faiss-cpu
 pymupdf
 fpdf2
-scikit-learn
+scikit-learn>=1.6,<2
+joblib>=1.4,<2
 pandas
 numpy
 python-dotenv

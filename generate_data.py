@@ -3,7 +3,7 @@ import pandas as pd
 
 # 재현성을 위한 시드 설정
 np.random.seed(42)
-NUM_SAMPLES = 1000
+NUM_SAMPLES = 5000
 
 # 1. 기본 인적 데이터 생성
 ages = np.random.randint(20, 66, size=NUM_SAMPLES)
@@ -138,4 +138,4 @@ df = pd.DataFrame(
 )
 
 df.to_csv("customer_data.csv", index=False, encoding="utf-8-sig")
-print(f"✅ 특약 정보가 포함된 총 {len(df)}건의 데이터가 'customer_data.csv'로 저장되었습니다.")
+print(f"특약 정보가 포함된 총 {len(df)}건의 데이터가 'customer_data.csv'로 저장되었습니다.")

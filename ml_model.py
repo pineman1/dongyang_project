@@ -2,8 +2,9 @@
 
 from functools import lru_cache
 
-from customer_ml.data import DATA_PATH, read_dataset
+from customer_ml.data import DATA_PATH
 from customer_ml.model import NO_DATA, CustomerPredictor
+from customer_ml.store import load_or_train
 
 PREFERRED_PRODUCTS = {"암보험": "수호천사 암/건강보험", "연금보험": "수호천사 행복 연금보험",
                       "종신보험": "수호천사 우리가족 종신보험", "유병자보험": "수호천사 간편심사(유병자)보험"}
@@ -11,7 +12,7 @@ PREFERRED_PRODUCTS = {"암보험": "수호천사 암/건강보험", "연금보�
 
 @lru_cache(maxsize=1)
 def _predictor(contents: bytes) -> CustomerPredictor:
-    return CustomerPredictor(read_dataset(contents, DATA_PATH.name).data)
+    return load_or_train(contents, DATA_PATH.name)[1]
 
 
 def get_recommendation(customer_info):

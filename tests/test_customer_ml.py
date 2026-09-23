@@ -25,13 +25,13 @@ def predictor(dataset):
     return CustomerPredictor(dataset.data)
 
 
-def test_original_and_six_sorted_views_are_exactly_one_population(dataset):
+def test_expanded_population_and_historical_sorted_views(dataset):
     archive = load_dataset(ZIP_PATH)
-    pd.testing.assert_frame_equal(dataset.data, archive.data)
-    assert dataset.fingerprint == archive.fingerprint
+    assert len(dataset.data) == 5000
+    assert dataset.fingerprint != archive.fingerprint
     assert archive.sorted_views == 6
     assert len(archive.data) == 1000
-    assert dataset.metadata["exact_duplicate_rows"] == 15
+    assert dataset.metadata["exact_duplicate_rows"] >= 15
     assert list(archive.data.columns) == COLUMNS
     assert archive.source_sha256 != dataset.source_sha256
 
@@ -90,7 +90,7 @@ def test_group_split_keeps_repeated_profiles_together(dataset):
     train_profiles = set(map(tuple, train[FEATURES].to_numpy()))
     test_profiles = set(map(tuple, test[FEATURES].to_numpy()))
     assert not train_profiles & test_profiles
-    assert len(train) + len(test) == 1000
+    assert len(train) + len(test) == len(dataset.data)
     assert set(train.index).isdisjoint(test.index)
 
 
@@ -98,15 +98,12 @@ def test_recommendations_and_selected_product_use_valid_riders(dataset, predicto
     customer = dataset.data.iloc[250][FEATURES].to_dict()
     recommended = predictor.recommend(customer)
     assert abs(sum(row["score"] for row in recommended["product_ranking"]) - 1) < 1e-12
-    assert recommended["training_rows"] == 1000
+    assert recommended["training_rows"] == len(dataset.data)
+    assert recommended["available"] and recommended["rider_available"]
     for product, allowed in PRODUCT_RIDERS.items():
         result = predictor.recommend(customer, product)
-        matching = dataset.data.loc[(dataset.data[FEATURES] == pd.Series(customer)).all(axis=1)]
-        if product in set(matching["가입상품"]):
-            assert result["rider_available"] and result["rider"] in allowed
-        else:
-            assert not result["rider_available"] and result["rider"] is None
-            assert result["rider_ranking"] == [] and result["rider_score"] is None
+        assert result["rider_available"] and result["rider"] in allowed
+        assert abs(sum(row["score"] for row in result["rider_ranking"]) - 1) < 1e-12
         assert result["rider_product"] == product
         assert result["product"] == recommended["product"]
     batch = predictor.predict_batch(dataset.data.iloc[:80])
@@ -118,8 +115,10 @@ def test_recommendations_and_selected_product_use_valid_riders(dataset, predicto
 def test_metrics_recomputed_and_legacy_adapter(dataset, predictor):
     report, rows = evaluate(dataset)
     assert report["split"]["overlapping_groups"] == 0
-    assert report["serving_policy"]["holdout_profile_coverage"] == 0
-    assert report["evaluation_scope"] == "underlying_classifier_before_no_data_policy"
+    assert report["serving_policy"]["holdout_exact_profile_coverage"] == 0
+    assert report["serving_policy"]["holdout_prediction_coverage"] == 1
+    assert report["evaluation_scope"] == "serving_classifier_with_predict_proba_fallback"
+    assert report["one_thousand_training_rows_comparison"]["training_rows"] == 1000
     assert report["metrics"]["product_accuracy"] == (rows["가입상품"] == rows.predicted_product).mean()
     both = (rows["가입상품"] == rows.predicted_product) & (rows["가입특약"] == rows.predicted_rider)
     assert report["metrics"]["product_and_rider_accuracy"] == both.mean()
@@ -129,11 +128,24 @@ def test_metrics_recomputed_and_legacy_adapter(dataset, predictor):
     new = predictor.recommend(customer)
     assert old["주계약"] == new["product"]
     assert old["추천특약"] == (new["rider"] if new["rider_available"] else NO_DATA)
-    assert old["학습고객수"] == 1000
+    assert old["학습고객수"] == len(dataset.data)
 
 
-@pytest.mark.parametrize("change", [{"연소득_만원": 3500}, {"나이": 66}, {"흡연여부": "알 수 없음"}, {"나이": None}])
-def test_unlearned_inputs_do_not_call_model_or_return_scores(dataset, predictor, monkeypatch, change):
+def test_default_joblib_loads_without_retraining(monkeypatch):
+    from customer_ml import store
+    from customer_ml.data import DATA_PATH
+    from unittest.mock import Mock
+    never_train = Mock(side_effect=AssertionError("A valid Joblib artifact must load without training"))
+    monkeypatch.setattr(store, "evaluate", never_train)
+    monkeypatch.setattr(store, "read_dataset", never_train)
+    monkeypatch.setattr("customer_ml.model.make_classifier", never_train)
+    dataset, predictor, report = store.load_or_train(DATA_PATH.read_bytes(), DATA_PATH.name)
+    assert len(dataset.data) == len(predictor.data) == report["final_training_rows"]
+    never_train.assert_not_called()
+
+
+@pytest.mark.parametrize("change", [{"나이": 66}, {"흡연여부": "알 수 없음"}, {"나이": None}])
+def test_invalid_inputs_do_not_call_model_or_return_scores(dataset, predictor, monkeypatch, change):
     from unittest.mock import Mock
     customer = {**dataset.data.iloc[250][FEATURES].to_dict(), **change}
     rank = Mock(side_effect=AssertionError("Unlearned inputs must not be predicted"))
@@ -146,35 +158,40 @@ def test_unlearned_inputs_do_not_call_model_or_return_scores(dataset, predictor,
     rank.assert_not_called()
 
 
-def test_seen_individual_values_but_unseen_combination_is_no_data(dataset, predictor):
+def test_unseen_combination_uses_model_probabilities(dataset, predictor):
     customer = {"나이": 40, "성별": "남성", "연소득_만원": 5000, "직업위험등급": 1,
                 "결혼여부": "기혼", "자녀수": 1, "흡연여부": "비흡연", "만성질환": "없음", "가족력": "없음"}
     assert all(value in set(dataset.data[field]) for field, value in customer.items())
     assert not (dataset.data[FEATURES] == pd.Series(customer)).all(axis=1).any()
-    assert predictor.recommend(customer)["message"] == NO_DATA
+    result = predictor.recommend(customer)
+    assert result["available"] and result["rider_available"] and result["used_fallback"]
+    assert result["product"] == result["product_ranking"][0]["label"]
+    assert result["rider"] == result["rider_ranking"][0]["label"]
+    assert result["product_ranking"][0]["score"] == max(predictor.main_model.predict_proba(pd.DataFrame([customer]))[0])
     assert predictor.recommend(dataset.data.iloc[0][FEATURES].to_dict(), product="새 보험")["message"] == NO_DATA
 
 
-def test_batch_and_legacy_no_data_do_not_leak_results(dataset, predictor):
+def test_batch_and_legacy_predict_unseen_valid_profile(dataset, predictor):
     from ml_model import get_recommendation
     customer = dataset.data.iloc[250][FEATURES].to_dict()
     unseen = {**customer, "연소득_만원": 3500}
     results = predictor.predict_batch(pd.DataFrame([customer, unseen]))
     assert results.iloc[0]["available"]
-    assert not results.iloc[1]["available"] and results.iloc[1]["message"] == NO_DATA
-    assert results.iloc[1]["product"] is None and results.iloc[1]["rider"] is None
+    assert results.iloc[1]["available"] and results.iloc[1]["rider_available"]
+    assert results.iloc[1]["rider"] in PRODUCT_RIDERS[results.iloc[1]["product"]]
     output = get_recommendation({**unseen, "선호상품": "암보험"})
-    assert not output["자료있음"] and not output["특약자료있음"]
-    assert output["주계약"] == output["추천특약"] == NO_DATA
-    assert output["주계약_확률"] is None and output["특약_확률"] is None
+    assert output["자료있음"] and output["특약자료있음"]
+    assert output["주계약"] == "수호천사 암/건강보험"
+    assert output["추천특약"] in PRODUCT_RIDERS[output["주계약"]]
+    assert output["주계약_확률"] is not None and output["특약_확률"] is not None
 
 
-def test_preferred_product_cannot_bypass_rider_evidence(dataset):
+def test_preferred_product_uses_its_own_rider_model(dataset):
     from ml_model import get_recommendation
     customer = dataset.data.iloc[250][FEATURES].to_dict()
     output = get_recommendation({**customer, "선호상품": "연금보험"})
-    assert output["자료있음"] and not output["특약자료있음"]
-    assert output["추천특약"] == NO_DATA and output["특약_확률"] is None
+    assert output["자료있음"] and output["특약자료있음"]
+    assert output["추천특약"] == "특약 없음" and output["특약_확률"] == 100
 
 
 def test_sorted_order_does_not_change_predictions(dataset, predictor):

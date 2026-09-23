@@ -214,20 +214,19 @@ def format_docs(docs):
 
 def process_recommendation(customer_info, retriever, llm):
     ml_result = get_recommendation(customer_info)
+    if not ml_result.get("자료있음") or not ml_result.get("특약자료있음"):
+        with st.chat_message("assistant"):
+            st.info("자료가 없음")
+        st.session_state.messages.append({"role": "assistant", "content": "자료가 없음"})
+        for key in ("last_recommended_product", "last_recommended_rider", "last_customer_info"):
+            st.session_state.pop(key, None)
+        return
     override_msg = ""
     
     # 🌟 [고객 지시 우선권 발동]
     preferred = customer_info.get("선호상품")
     if preferred:
-        if preferred == "암보험": 
-            ml_result.update({'주계약': "무배당 수호천사 암/건강보험", '주계약_확률': 99.9, '추천특약': "표적항암약물허가치료 특약"})
-        elif preferred == "연금보험": 
-            ml_result.update({'주계약': "수호천사 행복 연금보험", '주계약_확률': 99.9, '추천특약': "특약 없음"})
-        elif preferred == "종신보험": 
-            ml_result.update({'주계약': "무배당 수호천사 우리가족 종신보험", '주계약_확률': 99.9})
-        elif preferred == "유병자보험": 
-            ml_result.update({'주계약': "무배당 수호천사 간편심사보험", '주계약_확률': 99.9})
-        override_msg = f"\n\n🚨 **[고객 니즈 최우선 반영]** 통계 예측을 넘어, 고객님이 원하신 **{preferred}** 위주로 설계했습니다."
+        override_msg = f"\n\n**[고객 선호 반영]** {preferred} 상품의 특약 모델 결과를 사용했습니다."
 
     st.session_state.last_recommended_product = ml_result['주계약']
     st.session_state.last_recommended_rider = ml_result['추천특약']
