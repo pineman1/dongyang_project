@@ -114,9 +114,9 @@ def create_rag_chain(file_path, google_api_key):
         vectorstore.save_local(INDEX_SAVE_PATH)
         
     retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
-    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=google_api_key)
+    llm = ChatGoogleGenerativeAI(model="models/gemini-flash-lite-latest", google_api_key=google_api_key)
     router_llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash", 
+        model="models/gemini-flash-lite-latest", 
         google_api_key=google_api_key,
         model_kwargs={"response_mime_type": "application/json"}
     )
@@ -323,19 +323,32 @@ if raw_user_input:
         else:
             st.session_state.show_tuning = True
             st.rerun()
-            
-    # [의도 3] 거절 극복 화법
+   # [의도 3] 거절 극복 화법         
     elif intent == "objection":
         with st.chat_message("assistant"):
-            with st.spinner("최고의 영업 실장 모드로 거절 극복 화법을 작성 중입니다..."):
+            with st.spinner("거절 극복 화법을 작성 중입니다..."):
                 try:
-                    obj_prompt = PromptTemplate.from_template("...") # 거절 극복 프롬프트
-                    obj_chain = ({"context": retriever | format_docs, "question": RunnablePassthrough()} | obj_prompt | llm | StrOutputParser())
+                    obj_prompt = PromptTemplate.from_template(
+                        "당신은 동양생명 20년 차 베테랑 영업 지점장입니다. "
+                        "고객의 거절 발언에 공감하면서도 객관적인 금융 데이터와 대안을 제시하여 설득하는 "
+                        "3문장 내외의 실전 세일즈 화법을 작성하세요.\n\n"
+                        "[고객 거절]: {question}"
+                    )
+                    obj_chain = (
+                        {"question": RunnablePassthrough()} 
+                        | obj_prompt 
+                        | llm 
+                        | StrOutputParser()
+                    )
                     response = obj_chain.invoke(user_input)
-                    response = mask_pii(response)
+                    # 마스킹 처리 (privacy 모듈 연동)
+                    if 'mask_pii' in globals():
+                        response = mask_pii(response)
+                    if 'mask_rrn' in globals():
+                        response = mask_rrn(response)
                     st.markdown(response)
                 except Exception as e:
-                    response = "⚠️ 현재 이용자가 많아 AI 서버 통신이 지연되고 있습니다. 약 30초 후 다시 시도해 주세요."
+                    response = f"⚠️ 화법 생성 중 일시적인 오류가 발생했습니다: {e}"
                     st.error(response)
         st.session_state.messages.append({"role": "assistant", "content": response})
 
@@ -344,12 +357,55 @@ if raw_user_input:
         with st.chat_message("assistant"):
             with st.spinner("약관을 확인 중입니다..."):
                 try:
-                    qa_prompt = PromptTemplate.from_template("...") # 일반 약관 Q&A 프롬프트
-                    qa_chain = ({"context": retriever | format_docs, "question": RunnablePassthrough()} | qa_prompt | llm | StrOutputParser())
-                    raw_response = qa_chain.invoke(user_input)
-                    response = mask_rrn(raw_response) 
+                    qa_prompt = PromptTemplate.from_template(
+                        "당신은 동양생명 약관 전문 AI 어시스턴트입니다. "
+                        "제공된 [약관] 내용을 바탕으로 고객의 [질문]에 핵심만 정확하고 친절하게 답변하세요.\n\n"
+                        "[약관]: {context}\n\n"
+                        "[질문]: {question}"
+                    )
+                    qa_chain = (
+                        {"context": retriever | format_docs, "question": RunnablePassthrough()} 
+                        | qa_prompt 
+                        | llm 
+                        | StrOutputParser()
+                    )
+                    response = qa_chain.invoke(user_input)
+                    # 🌟 버그 수정: raw_response 대신 정상 response 변수 마스킹!
+                    if 'mask_pii' in globals():
+                        response = mask_pii(response)
+                    if 'mask_rrn' in globals():
+                        response = mask_rrn(response)
                     st.markdown(response)
                 except Exception as e:
-                    response = "⚠️ 현재 이용자가 많아 AI 서버 통신이 지연되고 있습니다. 약 30초 후 다시 질문해 주세요."
+                    response = f"⚠️ 답변 생성 중 일시적인 오류가 발생했습니다: {e}"
                     st.error(response)
         st.session_state.messages.append({"role": "assistant", "content": response})
+    # [의도 3] 거절 극복 화법
+    #elif intent == "objection":
+     #   with st.chat_message("assistant"):
+      #      with st.spinner("최고의 영업 실장 모드로 거절 극복 화법을 작성 중입니다..."):
+       #         try:
+        #            obj_prompt = PromptTemplate.from_template("...") # 거절 극복 프롬프트
+         #           obj_chain = ({"context": retriever | format_docs, "question": RunnablePassthrough()} | obj_prompt | llm | StrOutputParser())
+          #          response = obj_chain.invoke(user_input)
+           #         response = mask_pii(response)
+            #        st.markdown(response)
+             #   except Exception as e:
+              #      response = "⚠️ 현재 이용자가 많아 AI 서버 통신이 지연되고 있습니다. 약 30초 후 다시 시도해 주세요."
+               #     st.error(response)
+        #st.session_state.messages.append({"role": "assistant", "content": response})
+
+    # [의도 4] 일반 약관 Q&A
+    #else:
+     #   with st.chat_message("assistant"):
+      #      with st.spinner("약관을 확인 중입니다..."):
+       #         try:
+        #            qa_prompt = PromptTemplate.from_template("...") # 일반 약관 Q&A 프롬프트
+         #           qa_chain = ({"context": retriever | format_docs, "question": RunnablePassthrough()} | qa_prompt | llm | StrOutputParser())
+          #          raw_response = qa_chain.invoke(user_input)
+           #         response = mask_rrn(raw_response) 
+            #        st.markdown(response)
+             #   except Exception as e:
+              #      response = "⚠️ 현재 이용자가 많아 AI 서버 통신이 지연되고 있습니다. 약 30초 후 다시 질문해 주세요."
+               #     st.error(response)
+        #st.session_state.messages.append({"role": "assistant", "content": response})
