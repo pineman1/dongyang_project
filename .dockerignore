@@ -1,0 +1,21 @@
+# 🚨 보안: 환경변수 및 시크릿 파일 (API 키 유출 방지)
+.env
+*.env
+.env.*
+
+# 파이썬 캐시 및 빌드 찌꺼기
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 로컬 가상환경 폴더
+venv/
+.venv/
+env/
+
+# Git 관련 및 OS 임시 파일
+.git/
+.gitignore
+.DS_Store
+Thumbs.db
