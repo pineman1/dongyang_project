@@ -198,14 +198,18 @@ def create_rag_chain(file_path, google_api_key):
     # 3. 메인 대화 및 스크립트 작성용 LLM (Gemini 3.6 Flash) 구현이 오래걸려서 1.5로 바꿔봄
     llm = ChatGoogleGenerativeAI(
         model="gemini-3.5-flash", 
-        google_api_key=google_api_key
+        google_api_key=google_api_key,
+        temperature=0.3, # 불필요하게 다양한 답변을 만들지 않도록 낮춤
+        max_output_tokens=200 # 세일즈 스트립트 생성 최대 200 토큰
     )
     
     # 4. 의도 분류기용 JSON 모드 LLM (Gemini 3.6 Flash)일단 1.5로 줄여봄
     router_llm = ChatGoogleGenerativeAI(
         model="gemini-3.5-flash", 
         google_api_key=google_api_key,
-        model_kwargs={"response_mime_type": "application/json"}
+        model_kwargs={"response_mime_type": "application/json"},
+        temperature=0.0, # 불필요하게 다양한 답변을 만들지 않도록 낮춤
+        max_output_tokens=100 # JSON 결과만 필요하므로 최대 100 토큰
     )
     return retriever, llm, router_llm
 
