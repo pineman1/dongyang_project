@@ -13,7 +13,7 @@ from .data import DATA_PATH, ROOT, CustomerDataset, read_dataset
 from .model import CustomerPredictor
 from .train import evaluate
 
-CACHE_VERSION = 3
+CACHE_VERSION = 4
 ARTIFACT_DIR = ROOT / "artifacts" / "customer_ml"
 
 

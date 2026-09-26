@@ -23,6 +23,7 @@
   "evaluation_scope": "serving_classifier_with_predict_proba_fallback",
   "serving_policy": {
     "customer": "validated_features_then_highest_predict_proba",
+    "top_two": "two_highest_predict_proba_products_with_product_specific_riders",
     "rider": "highest_predict_proba_within_selected_product",
     "no_data_message": "자료가 없음",
     "holdout_prediction_coverage": 1.0,
@@ -46,7 +47,7 @@
   "random_state": 42,
   "selected_params": {
     "n_estimators": 160,
-    "max_depth": 9,
+    "max_depth": 6,
     "min_samples_leaf": 4
   },
   "tuning_candidates": [
@@ -57,7 +58,18 @@
         "min_samples_leaf": 4
       },
       "product_accuracy": 0.5410447761194029,
-      "product_and_rider_accuracy": 0.4228855721393035
+      "product_and_rider_accuracy": 0.4228855721393035,
+      "product_top2_coverage": 0.8034825870646766
+    },
+    {
+      "params": {
+        "n_estimators": 160,
+        "max_depth": 6,
+        "min_samples_leaf": 4
+      },
+      "product_accuracy": 0.5609452736318408,
+      "product_and_rider_accuracy": 0.43781094527363185,
+      "product_top2_coverage": 0.8034825870646766
     },
     {
       "params": {
@@ -66,7 +78,8 @@
         "min_samples_leaf": 2
       },
       "product_accuracy": 0.5261194029850746,
-      "product_and_rider_accuracy": 0.4154228855721393
+      "product_and_rider_accuracy": 0.4154228855721393,
+      "product_top2_coverage": 0.7885572139303483
     },
     {
       "params": {
@@ -75,7 +88,8 @@
         "min_samples_leaf": 1
       },
       "product_accuracy": 0.4689054726368159,
-      "product_and_rider_accuracy": 0.3694029850746269
+      "product_and_rider_accuracy": 0.3694029850746269,
+      "product_top2_coverage": 0.7512437810945274
     }
   ],
   "split": {
@@ -88,10 +102,12 @@
     "overlapping_groups": 0
   },
   "metrics": {
-    "product_accuracy": 0.5710059171597633,
-    "product_macro_f1": 0.555997728202713,
-    "rider_accuracy_given_true_product": 0.8116370808678501,
-    "product_and_rider_accuracy": 0.45660749506903353
+    "product_accuracy": 0.5769230769230769,
+    "product_top2_coverage": 0.814595660749507,
+    "product_macro_f1": 0.5542050216634705,
+    "rider_accuracy_given_true_product": 0.8076923076923077,
+    "product_and_rider_accuracy": 0.46055226824457596,
+    "product_and_rider_top2_coverage": 0.6548323471400395
   },
   "legacy_params_holdout": {
     "product_accuracy": 0.5710059171597633,
@@ -99,8 +115,9 @@
   },
   "one_thousand_training_rows_comparison": {
     "training_rows": 1000,
-    "product_accuracy": 0.5493096646942801,
-    "product_and_rider_accuracy": 0.4378698224852071
+    "product_accuracy": 0.5650887573964497,
+    "product_and_rider_accuracy": 0.4526627218934911,
+    "product_top2_coverage": 0.8126232741617357
   },
   "majority_baseline": {
     "product_accuracy": 0.33925049309664695,
@@ -108,46 +125,47 @@
   },
   "product_classification": {
     "수호천사 암/건강보험": {
-      "precision": 0.5432692307692307,
-      "recall": 0.6569767441860465,
-      "f1-score": 0.5947368421052631,
+      "precision": 0.5458715596330275,
+      "recall": 0.6918604651162791,
+      "f1-score": 0.6102564102564103,
       "support": 344.0
     },
     "수호천사 간편심사(유병자)보험": {
-      "precision": 0.604982206405694,
-      "recall": 0.6463878326996197,
-      "f1-score": 0.625,
+      "precision": 0.5897435897435898,
+      "recall": 0.6996197718631179,
+      "f1-score": 0.64,
       "support": 263.0
     },
     "수호천사 우리가족 종신보험": {
-      "precision": 0.5944444444444444,
-      "recall": 0.4841628959276018,
-      "f1-score": 0.5336658354114713,
+      "precision": 0.6428571428571429,
+      "recall": 0.4072398190045249,
+      "f1-score": 0.4986149584487535,
       "support": 221.0
     },
     "수호천사 행복 연금보험": {
-      "precision": 0.5547445255474452,
-      "recall": 0.40860215053763443,
-      "f1-score": 0.47058823529411764,
+      "precision": 0.5793650793650794,
+      "recall": 0.3924731182795699,
+      "f1-score": 0.46794871794871795,
       "support": 186.0
     },
-    "accuracy": 0.5710059171597633,
+    "accuracy": 0.5769230769230769,
     "macro avg": {
-      "precision": 0.5743601017917037,
-      "recall": 0.5490324058377256,
-      "f1-score": 0.555997728202713,
+      "precision": 0.5894593428997099,
+      "recall": 0.547798293565873,
+      "f1-score": 0.5542050216634705,
       "support": 1014.0
     },
     "weighted avg": {
-      "precision": 0.5725341613839843,
-      "recall": 0.5710059171597633,
-      "f1-score": 0.566502993170465,
+      "precision": 0.5845322622777702,
+      "recall": 0.5769230769230769,
+      "f1-score": 0.5675350813450111,
       "support": 1014.0
     }
   },
   "limitations": [
     "Synthetic labels were sampled by generate_data.py, not observed customer decisions.",
     "Scores are uncalibrated model outputs, not real purchase probabilities.",
+    "Top-2 coverage means the recorded synthetic product appears among two candidates, not that either is suitable.",
     "The CSV has no premium target; this model does not predict monthly premiums.",
     "This is one grouped holdout on synthetic rows, not external validation."
   ],

@@ -232,5 +232,6 @@ artifacts/*
 !artifacts/customer_ml/
 artifacts/customer_ml/*
 !artifacts/customer_ml/model.joblib
+!artifacts/customer_ml/mock_suitability.joblib
 data/raw/
 .qa/

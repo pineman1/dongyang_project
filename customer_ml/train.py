@@ -6,15 +6,16 @@ from pathlib import Path
 import platform
 
 import joblib
+import numpy as np
 import pandas as pd
 import sklearn
 from sklearn.metrics import accuracy_score, classification_report, f1_score
 from sklearn.model_selection import GroupShuffleSplit
 
 from .data import DATA_PATH, FEATURES, PRODUCT_RIDERS, ROOT, CustomerDataset, load_dataset
-from .model import CustomerPredictor, LEGACY_MODEL_PARAMS, NO_DATA
+from .model import CustomerPredictor, DEFAULT_MODEL_PARAMS, LEGACY_MODEL_PARAMS, NO_DATA
 
-TUNING_CANDIDATES = [LEGACY_MODEL_PARAMS,
+TUNING_CANDIDATES = [LEGACY_MODEL_PARAMS, DEFAULT_MODEL_PARAMS,
                      {"n_estimators": 240, "max_depth": 12, "min_samples_leaf": 2},
                      {"n_estimators": 320, "max_depth": 16, "min_samples_leaf": 1}]
 
@@ -36,6 +37,13 @@ def _accuracy(predictions: pd.DataFrame, actual: pd.DataFrame) -> dict:
             "product_and_rider_accuracy": float((product_ok & rider_ok).mean())}
 
 
+def _top_two_products(predictor: CustomerPredictor, customers: pd.DataFrame) -> np.ndarray:
+    """Rank products using the same predict_proba scores as serving."""
+    scores = predictor.main_model.predict_proba(customers[FEATURES])
+    order = np.argsort(-scores, axis=1, kind="stable")[:, :2]
+    return predictor.main_model.classes_[order]
+
+
 def select_parameters(train: pd.DataFrame) -> tuple[dict, list[dict]]:
     """Choose hyperparameters on a second grouped split, without seeing final holdout."""
     inner_train, inner_valid, _ = split_dataset(train)
@@ -43,9 +51,13 @@ def select_parameters(train: pd.DataFrame) -> tuple[dict, list[dict]]:
     for params in TUNING_CANDIDATES:
         candidate = CustomerPredictor(inner_train, params)
         metrics = _accuracy(candidate._predict_for_evaluation(inner_valid), inner_valid)
+        top_two = _top_two_products(candidate, inner_valid)
+        metrics["product_top2_coverage"] = float(
+            (top_two == inner_valid["가입상품"].to_numpy()[:, None]).any(axis=1).mean())
         scores.append({"params": dict(params), **metrics})
     best = max(enumerate(scores), key=lambda item: (
-        item[1]["product_and_rider_accuracy"], item[1]["product_accuracy"], -item[0]))[1]
+        item[1]["product_accuracy"], item[1]["product_top2_coverage"],
+        item[1]["product_and_rider_accuracy"], -item[0]))[1]
     return dict(best["params"]), scores
 
 
@@ -58,20 +70,30 @@ def evaluate(dataset: CustomerDataset) -> tuple[dict, pd.DataFrame]:
     legacy = predictor if selected_params == LEGACY_MODEL_PARAMS else CustomerPredictor(train, LEGACY_MODEL_PARAMS)
     legacy_metrics = _accuracy(legacy._predict_for_evaluation(test), actual)
     small_sample = train.sample(n=min(1000, len(train)), random_state=42)
-    small_model = CustomerPredictor(small_sample, LEGACY_MODEL_PARAMS)
+    small_model = CustomerPredictor(small_sample, selected_params)
     small_sample_metrics = _accuracy(small_model._predict_for_evaluation(test), actual)
+    small_top_two = _top_two_products(small_model, test)
+    small_sample_metrics["product_top2_coverage"] = float(
+        (small_top_two == actual["가입상품"].to_numpy()[:, None]).any(axis=1).mean())
     # Conditional rider quality measures the second stage using the known product.
     conditional = predictor._predict_for_evaluation(test, products=test["가입상품"])
     product = train["가입상품"].mode().iloc[0]
     rider = train.loc[train["가입상품"] == product, "가입특약"].mode().iloc[0]
     product_ok = predictions["product"] == actual["가입상품"]
     pair_ok = product_ok & (predictions["rider"] == actual["가입특약"])
+    top_two = _top_two_products(predictor, test)
+    second = predictor._predict_for_evaluation(test, products=top_two[:, 1])
+    top_two_product_ok = (top_two == actual["가입상품"].to_numpy()[:, None]).any(axis=1)
+    top_two_pair_ok = pair_ok | ((top_two[:, 1] == actual["가입상품"].to_numpy())
+                                 & (second["rider"].to_numpy() == actual["가입특약"].to_numpy()))
     score = {
         "product_accuracy": float(product_ok.mean()),
+        "product_top2_coverage": float(top_two_product_ok.mean()),
         "product_macro_f1": float(f1_score(actual["가입상품"], predictions["product"],
                                           labels=list(PRODUCT_RIDERS), average="macro", zero_division=0)),
         "rider_accuracy_given_true_product": float(accuracy_score(actual["가입특약"], conditional["rider"])),
         "product_and_rider_accuracy": float(pair_ok.mean()),
+        "product_and_rider_top2_coverage": float(top_two_pair_ok.mean()),
     }
     baseline = {"product_accuracy": float((actual["가입상품"] == product).mean()),
                 "product_and_rider_accuracy": float(((actual["가입상품"] == product) & (actual["가입특약"] == rider)).mean())}
@@ -80,6 +102,7 @@ def evaluate(dataset: CustomerDataset) -> tuple[dict, pd.DataFrame]:
         "evaluation_scope": "serving_classifier_with_predict_proba_fallback",
         "serving_policy": {
             "customer": "validated_features_then_highest_predict_proba",
+            "top_two": "two_highest_predict_proba_products_with_product_specific_riders",
             "rider": "highest_predict_proba_within_selected_product",
             "no_data_message": NO_DATA,
             "holdout_prediction_coverage": float(predictions[["product", "rider"]].notna().all(axis=1).mean()),
@@ -104,12 +127,15 @@ def evaluate(dataset: CustomerDataset) -> tuple[dict, pd.DataFrame]:
                                                          labels=list(PRODUCT_RIDERS), output_dict=True, zero_division=0),
         "limitations": ["Synthetic labels were sampled by generate_data.py, not observed customer decisions.",
                         "Scores are uncalibrated model outputs, not real purchase probabilities.",
+                        "Top-2 coverage means the recorded synthetic product appears among two candidates, not that either is suitable.",
                         "The CSV has no premium target; this model does not predict monthly premiums.",
                         "This is one grouped holdout on synthetic rows, not external validation."],
     }
     actual.insert(0, "canonical_row", test.index.to_numpy() + 1)
     actual["predicted_product"] = predictions["product"]
     actual["predicted_rider"] = predictions["rider"]
+    actual["second_predicted_product"] = top_two[:, 1]
+    actual["second_predicted_rider"] = second["rider"]
     actual["rider_given_true_product"] = conditional["rider"]
     return report, actual
 

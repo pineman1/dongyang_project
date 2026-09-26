@@ -11,7 +11,7 @@ from .data import CATEGORIES, FEATURES, NUMERIC, load_dataset, validate_features
 NOTICE = "고객 더미데이터의 가입 패턴을 학습한 예시입니다. 모델 점수는 실제 가입 확률이나 보장 적합성이 아닙니다."
 NO_DATA = "자료가 없음"
 LEGACY_MODEL_PARAMS = {"n_estimators": 160, "max_depth": 9, "min_samples_leaf": 4}
-DEFAULT_MODEL_PARAMS = dict(LEGACY_MODEL_PARAMS)
+DEFAULT_MODEL_PARAMS = {"n_estimators": 160, "max_depth": 6, "min_samples_leaf": 4}
 
 
 def make_classifier(params: dict | None = None) -> Pipeline:

@@ -122,6 +122,12 @@ def test_metrics_recomputed_and_legacy_adapter(dataset, predictor):
     assert report["metrics"]["product_accuracy"] == (rows["가입상품"] == rows.predicted_product).mean()
     both = (rows["가입상품"] == rows.predicted_product) & (rows["가입특약"] == rows.predicted_rider)
     assert report["metrics"]["product_and_rider_accuracy"] == both.mean()
+    top_two = (rows["가입상품"] == rows.predicted_product) | (rows["가입상품"] == rows.second_predicted_product)
+    top_two_pairs = both | ((rows["가입상품"] == rows.second_predicted_product)
+                            & (rows["가입특약"] == rows.second_predicted_rider))
+    assert report["metrics"]["product_top2_coverage"] == top_two.mean()
+    assert report["metrics"]["product_and_rider_top2_coverage"] == top_two_pairs.mean()
+    assert report["metrics"]["product_top2_coverage"] >= report["metrics"]["product_accuracy"]
     from ml_model import get_recommendation
     customer = dataset.data.iloc[200][FEATURES].to_dict()
     old = get_recommendation(customer)
@@ -129,6 +135,9 @@ def test_metrics_recomputed_and_legacy_adapter(dataset, predictor):
     assert old["주계약"] == new["product"]
     assert old["추천특약"] == (new["rider"] if new["rider_available"] else NO_DATA)
     assert old["학습고객수"] == len(dataset.data)
+    assert [option["주계약"] for option in old["추천순위"]] == [
+        row["label"] for row in new["product_ranking"][:2]]
+    assert all(option["추천특약"] in PRODUCT_RIDERS[option["주계약"]] for option in old["추천순위"])
 
 
 def test_default_joblib_loads_without_retraining(monkeypatch):
@@ -184,6 +193,9 @@ def test_batch_and_legacy_predict_unseen_valid_profile(dataset, predictor):
     assert output["주계약"] == "수호천사 암/건강보험"
     assert output["추천특약"] in PRODUCT_RIDERS[output["주계약"]]
     assert output["주계약_확률"] is not None and output["특약_확률"] is not None
+    assert output["미일치조건예측"]
+    assert len(output["추천순위"]) == 2
+    assert output["추천순위"][0]["모델점수"] >= output["추천순위"][1]["모델점수"]
 
 
 def test_preferred_product_uses_its_own_rider_model(dataset):

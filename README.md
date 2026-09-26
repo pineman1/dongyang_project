@@ -7,12 +7,13 @@
 달라졌을 때만 다시 학습합니다. 누락되거나 지원 범위를 벗어난 입력에는
 `자료가 없음`을 표시합니다.
 
-같은 검증 고객 1,014명을 고정했을 때 1,000건 학습 모델의 상품 정확도는
-54.9%, 상품·특약 동시 정확도는 43.8%였고, 3,986건 학습 모델은 각각
-57.1%, 45.7%였습니다. 생성 데이터 실험이며 실제 가입 적합도는 아닙니다.
-후보 트리 설정을 비교했지만 기존 160개·최대 깊이 9·리프 최소 4행 설정이
-내부 검증에서 가장 좋았습니다. 자세한 수치는
-[모델 검증 결과](reports/customer_ml_metrics.json)를 참고하세요.
+동일한 검증 고객 1,014명을 기준으로 3,986건 학습 모델의 주계약 1순위 정확도는
+57.7%, 주계약·특약 동시 정확도는 46.1%입니다. 정답 주계약이 1·2순위에 포함된 비율은
+81.5%, 주계약·특약 조합이 두 후보 중 하나와 일치한 비율은 65.5%입니다.
+같은 설정의 1,000건 학습 비교 모델은 각각 56.5%, 45.3%, 81.3%였습니다.
+트리 160개·최대 깊이 6·리프 최소 4개 설정을 학습 데이터 내부 검증으로 선택했습니다.
+이 수치는 생성된 정답에 대한 검증이며 실제 고객에게 적합하다는 뜻은 아닙니다.
+자세한 수치는 [모델 검증 결과](reports/customer_ml_metrics.json)를 참고하세요.
 
 Streamlit Cloud 주소 : https://dongyang-projectwithai.streamlit.app/
 
@@ -133,28 +134,50 @@ CTA: ➡️ '설계사 없이 내 보험 직접 DIY 하기' (간편결제로 즉
 추가 설명(개발 중) : 
 ## 고객 더미데이터 기반 상품·특약 모델
 
-기존 venv 실행 화면을 사용자 제공 `customer_data.csv` **1,000명**으로 학습하는 상품·특약 추천 모델에 연결했습니다.
-학습 데이터에는 월 보험료 정답이 없으므로 이 화면에서는 보험료를 예측하지 않습니다.
+`customer_data.csv`의 생성 더미데이터 **5,000건**으로 주계약·특약 모델을 학습합니다.
+`ml_model.get_recommendation()`은 유효한 고객 조건을 받아 주계약 1·2순위와 각 상품의 특약을 반환합니다.
+9개 조건의 조합이 학습 행과 일치하지 않아도 모델이 예측합니다. 필수 조건이 누락되거나 허용 범위를 벗어나면 **자료가 없음**을 반환합니다.
+학습 데이터에는 월 보험료 정답이 없으므로 보험료를 예측하지 않습니다. 모델 점수는 실제 가입 확률이나 고객 적합성이 아닙니다.
 
-- [설치·실행·모델 설명](README_CUSTOMER_ML.md)
+- [검증 고객별 1·2순위 예측 결과](reports/customer_ml_holdout_predictions.csv)
 - [고객 분류·정렬 분석 자료](reports/customer_segmentation/README.md)
 - [분리된 검증 데이터 평가 결과](reports/customer_ml_metrics.json)
 
-현재 작업 폴더에서 기존 `venv`로 실행:
+현재 작업 폴더에서 기존 `venv`로 학습·검증:
 
 ```powershell
 cd dongyang_project
-..\venv\Scripts\python.exe -m pip install -r requirements-premium.txt
-..\venv\Scripts\python.exe -m streamlit run premium_app.py
+..\venv\Scripts\python.exe -m customer_ml.train
+..\venv\Scripts\python.exe -m pytest tests/test_customer_ml.py -q
 ```
-
-**API 키 없이 실행**됩니다. `premium_app.py`는 기존 명령 호환용이며, `customer_app.py`로 실행해도 같은 화면입니다. 기존 앱에서는 사이드바의 `Customer Recommendation` 페이지를 사용하세요. `ml_model.get_recommendation()`도 같은 고객 모델을 사용합니다.
 
 ZIP의 정렬 CSV 6개는 같은 고객의 순서만 다르므로, 일치 여부를 검증한 뒤 한 표본만 학습합니다. 분석ID 및 상품·특약 정답에서 파생된 열은 학습 입력에서 제외합니다.
 
-입력한 9개 고객 조건이 모두 일치하는 학습 자료가 없으면 **자료가 없음**을 표시합니다. 특약은 선택한 상품에서도 같은 조건의 학습 행이 있어야 표시하며, 자료가 없을 때 점수나 후속 설명을 생성하지 않습니다.
+### 별도 목업 적합성 실험
 
-이전 공개 보험료 예측 화면은 `premium_reference_app.py`로 보관했습니다. 별도 실행과 과거 자료 설명은 [README_PREMIUM.md](README_PREMIUM.md)에 있습니다.
+보장 목표와 월 예산을 명시한 **별도 목업 시나리오**는 `customer_ml.mock_suitability`에서 생성·검증합니다.
+이 실험의 정답은 공개된 목업 규칙에서 만들며, 기존 `가입상품` 정답과 다릅니다.
+목업 정책 재현율 99.9%를 실제 고객 추천 정확도나 기존 모델의 성능 개선으로 해석하면 안 됩니다.
+임의로 설정한 모의 월비용을 사용하므로 실제 보험료·가입 가능 여부는 판단할 수 없습니다.
+`recommend_mock()`은 1순위 모델 후보와, 보장·예산 기준을 충족할 때만 2순위 비교 후보 및 상품별 특약을 반환합니다.
+
+```powershell
+..\venv\Scripts\python.exe -m customer_ml.mock_suitability
+..\venv\Scripts\python.exe -m pytest tests/test_mock_suitability.py -q
+```
+
+코드에서는 9개 고객 조건과 `우선보장목표`, `추가보장목표`, `월예산_만원`을 담아
+`customer_ml.mock_suitability.recommend_mock(customer)`를 호출합니다.
+기존 어댑터 모듈에서는 `ml_model.get_mock_recommendation(customer)`로 동일하게 호출할 수 있습니다.
+기존 `ml_model.get_recommendation()`은 다른 정답인 가입상품 예측 모델로 남겨 두었습니다.
+학습 행과 9개 조건이 정확히 같지 않아도 유효한 값이면 추정합니다.
+예산·보장 기준을 충족하는 두 번째 상품이 없으면 1순위만 반환하고,
+적합한 상품이 없으면 `예산·보장 재검토`와 빈 추천순위를 반환합니다.
+
+평가 방법과 추천 보류 비율은 [정확도 점검 보고서](reports/customer_ml_accuracy_audit.md),
+전체 5,000건은 [목업 고객 CSV](data/mock_suitability_customers.csv),
+고객별 검증 결과는 [목업 검증 CSV](reports/mock_suitability_holdout.csv)에 있습니다.
+정답과 예측을 가린 [독립 검토 양식](reports/mock_suitability_review_template.csv)도 생성합니다.
 
 ---
 
