@@ -26,6 +26,9 @@ except ModuleNotFoundError:
 # 기존 코드 (삭제):
 # from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+# 🛡️ 추가된 모듈: privacy.py에서 mask_pii 함수를 가져옵니다. 🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️
+from privacy import mask_pii
+
 # 변경 코드:
 try:
     from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -38,6 +41,19 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from login import check_login
+
+import ui  #📌 분리된 UI 모듈 임포트 (ui.py에 작성될 함수들)
+# 🛡️ 추가된 모듈: privacy.py에서 mask_pii 함수를 가져옵니다. 🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️
+from privacy import mask_pii
+
+# 🛡️ 주민등록번호 마스킹 함수 추가 🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️
+def mask_rrn(text):
+    if not isinstance(text, str):
+        return text
+    # 주민번호 패턴: 생년월일 6자리 + 하이픈(선택) + 성별(1~4) + 나머지 6자리
+    pattern = r'(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01]))[-?\s]*([1-4])\d{6}'
+    return re.sub(pattern, r'\1-\2******', text)
+
 
 st.set_page_config(page_title="동양생명 AI FC 어시스턴트", layout="wide")
 
@@ -367,7 +383,10 @@ for message in st.session_state.messages:
 # ==========================================
 # 💬 채팅 인터페이스 및 의도 라우팅
 # ==========================================
-if user_input := st.chat_input("채팅으로 대화하세요 (예: 30대 남성 고혈압인데 암보험 원해)"):
+raw_user_input = st.chat_input("채팅으로 대화하세요 (예: 30대 남성 고혈압인데 암보험 원해)")   #🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️
+if raw_user_input:
+    # 1. 입력 마스킹 (privacy.py 의 mask_pii 통과)  
+    user_input = mask_pii(raw_user_input)
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"): 
         st.markdown(user_input)
@@ -466,7 +485,10 @@ if user_input := st.chat_input("채팅으로 대화하세요 (예: 30대 남성 
                 try:
                     obj_prompt = PromptTemplate.from_template(...) # 기존 프롬프트
                     obj_chain = ({"context": retriever | format_docs, "question": RunnablePassthrough()} | obj_prompt | llm | StrOutputParser())
+                    # 변경 후 (수정된 코드):
                     response = obj_chain.invoke(user_input)
+                    # 💡 출력 마스킹: AI 응답에 개인정보가 포함될 가능성을 원천 차단 🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️🛡️
+                    response = mask_pii(response)
                     st.markdown(response)
                 except Exception as e:
                     # 🚨 429 한도 초과 및 서버 에러 발생 시 방어 로직
@@ -482,6 +504,7 @@ if user_input := st.chat_input("채팅으로 대화하세요 (예: 30대 남성 
                     qa_prompt = PromptTemplate.from_template(...) # 기존 프롬프트
                     qa_chain = ({"context": retriever | format_docs, "question": RunnablePassthrough()} | qa_prompt | llm | StrOutputParser())
                     response = qa_chain.invoke(user_input)
+                    response = mask_rrn(raw_response)  # 👈 AI 응답 마스킹
                     st.markdown(response)
                 except Exception as e:
                     # 🚨 에러 방어 로직

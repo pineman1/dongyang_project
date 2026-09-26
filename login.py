@@ -1,19 +1,28 @@
 # ==========================================
-# 🔐 설계사 로그인
+# 🔐 설계사 로그인 (SHA-256 해시 보안 적용)
 # ==========================================
+import hashlib
 import sqlite3
 import streamlit as st
 
 DB_PATH = "agents.db"
 
 
+def hash_password(password: str) -> str:
+    """비밀번호를 SHA-256 알고리즘으로 해싱합니다."""
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+
+
 def check_login(employee_no, password):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
+    # 입력받은 비밀번호를 해싱하여 DB의 해시값과 비교
+    hashed_pw = hash_password(password)
+
     cursor.execute(
         "SELECT employee_no FROM agents WHERE employee_no = ? AND password = ?",
-        (employee_no, password)
+        (employee_no, hashed_pw),
     )
 
     result = cursor.fetchone()
@@ -59,9 +68,7 @@ if not st.session_state.logged_in:
 # ==========================================
 st.title("💼 동양생명 하이브리드 세일즈 어시스턴트")
 
-st.write(
-    f"로그인된 설계사: **{st.session_state.employee_no}**"
-)
+st.write(f"로그인된 설계사: **{st.session_state.employee_no}**")
 
 if st.button("로그아웃"):
     st.session_state.logged_in = False
