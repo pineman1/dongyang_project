@@ -1,3 +1,5 @@
+접속 url : http://43.201.62.208:8501/
+
 # 💼 동양생명 AI FC 어시스턴트 (Dongyang Life AI FC Assistant)
 
 > **고객 데이터 기반 ML 상품·특약 추천 × Gemini RAG 기반 세일즈 스크립트 & 실시간 가입설계 지원 툴**
